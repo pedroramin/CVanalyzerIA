@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CVAnalyzer</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #aaa;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #111;
+      color: #fff;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .btn-main {
+      background: #c8f060;
+      color: #000;
+    }
+
+    .btn-secondary {
+      background: #333;
+      color: #fff;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      background: #222;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: #c8f060;
+      color: #000;
+      font-weight: bold;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .msg {
+      min-height: 20px;
+      font-size: 14px;
+      margin-top: 8px;
+      color: #ff8080;
+    }
+
+    .success {
+      color: #9cff9c;
+    }
+
+    .user-box {
+      text-align: center;
+    }
+
+    .user-box p {
+      margin: 10px 0;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="authArea">
+      <h1>CVAnalyzer</h1>
+      <div class="subtitle">Login e cadastro</div>
+
+      <div class="tabs">
+        <div class="tab active" id="tabLogin" onclick="showTab('login')">Entrar</div>
+        <div class="tab" id="tabRegister" onclick="showTab('register')">Cadastrar</div>
+      </div>
+
+      <div id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Seu e-mail" />
+        <input type="password" id="loginPassword" placeholder="Sua senha" />
+        <button class="btn-main" onclick="handleLogin()">Entrar</button>
+      </div>
+
+      <div id="registerForm" class="hidden">
+        <input type="text" id="registerName" placeholder="Seu nome completo" />
+        <input type="email" id="registerEmail" placeholder="Seu e-mail" />
+        <input type="password" id="registerPassword" placeholder="Crie uma senha" />
+        <button class="btn-main" onclick="handleRegister()">Criar conta</button>
+      </div>
+
+      <div id="msg" class="msg"></div>
+    </div>
+
+    <div id="appArea" class="hidden">
+      <div class="user-box">
+        <h1>CVAnalyzer</h1>
+        <p><strong>Logado com:</strong></p>
+        <p id="userEmail">-</p>
+        <p id="userName">-</p>
+        <button class="btn-secondary" onclick="handleLogout()">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://zmvkaqhiodkxugpvuezd.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_lO-GPDnNoCdFz__ElDWArQ_iC2jrfYx';
+
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function showTab(tab) {
+      document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+      clearMsg();
+    }
+
+    function setMsg(text, ok = false) {
+      const el = document.getElementById('msg');
+      el.textContent = text;
+      el.className = ok ? 'msg success' : 'msg';
+    }
+
+    function clearMsg() {
+      setMsg('');
+    }
+
+    function traduzirErro(msg) {
+      if (msg.includes('Invalid login credentials')) return 'E-mail ou senha incorretos.';
+      if (msg.includes('User already registered')) return 'Esse e-mail já está cadastrado.';
+      if (msg.includes('Password should be at least')) return 'A senha precisa ter pelo menos 6 caracteres.';
+      if (msg.includes('Email not confirmed')) return 'Confirme o e-mail antes de entrar.';
+      return msg;
+    }
+
+    async function handleRegister() {
+      clearMsg();
+
+      const name = document.getElementById('registerName').value.trim();
+      const email = document.getElementById('registerEmail').value.trim();
+      const password = document.getElementById('registerPassword').value;
+
+      if (!name || !email || !password) {
+        setMsg('Preencha todos os campos.');
+        return;
+      }
+
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: name }
+        }
+      });
+
+      if (error) {
+        setMsg(traduzirErro(error.message));
+        return;
+      }
+
+      if (data.session) {
+        setMsg('Conta criada com sucesso.', true);
+      } else {
+        setMsg('Conta criada. Agora faça login.', true);
+        showTab('login');
+      }
+    }
+
+    async function handleLogin() {
+      clearMsg();
+
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      if (!email || !password) {
+        setMsg('Preencha e-mail e senha.');
+        return;
+      }
+
+      const { error } = await sb.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        setMsg(traduzirErro(error.message));
+      }
+    }
+
+    async function handleLogout() {
+      await sb.auth.signOut();
+    }
+
+    function showApp(user) {
+      document.getElementById('authArea').classList.add('hidden');
+      document.getElementById('appArea').classList.remove('hidden');
+      document.getElementById('userEmail').textContent = user.email || '-';
+      document.getElementById('userName').textContent = user.user_metadata?.full_name || '-';
+    }
+
+    function showAuth() {
+      document.getElementById('authArea').classList.remove('hidden');
+      document.getElementById('appArea').classList.add('hidden');
+    }
+
+    sb.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        showApp(session.user);
+      } else {
+        showAuth();
+      }
+    });
+
+    async function init() {
+      const { data } = await sb.auth.getSession();
+      if (data.session?.user) {
+        showApp(data.session.user);
+      } else {
+        showAuth();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
