@@ -1938,6 +1938,37 @@ async function redeemCode() {
   }
 }
 
+  // ✅ TRATAR RETORNO DO EMAIL DE CONFIRMAÇÃO
+async function handleEmailConfirmationReturn() {
+  const hash = window.location.hash;
+
+  if (hash && hash.includes("access_token")) {
+    // Remove o hash da URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    // Faz logout automático pra não entrar direto
+    await sb.auth.signOut();
+
+    // Mostra mensagem bonita
+    const okEl = document.getElementById('registerSuccess');
+    const errEl = document.getElementById('registerError');
+
+    if (okEl) {
+      okEl.innerHTML = '✅ Email confirmado com sucesso! Agora faça login.';
+      okEl.classList.add('show');
+    }
+
+    if (errEl) errEl.classList.remove('show');
+
+    // Garante que fica na tela de login
+    showTab('login');
+  }
+}
+
+// roda quando abrir o site
+window.addEventListener('load', () => {
+  handleEmailConfirmationReturn();
+});
 // ─── Init ─────────────────────────────────────────────────────────────────────
 // onAuthStateChange já dispara automaticamente com a sessão atual ao ser registrado.
 // NÃO chamamos getSession() separado para evitar race condition com o listener.
