@@ -1073,39 +1073,53 @@ async function handleRegister() {
   const errEl = document.getElementById('registerError');
   const okEl  = document.getElementById('registerSuccess');
   const btn   = document.getElementById('btnRegister');
-  errEl.classList.remove('show'); okEl.classList.remove('show');
-  if (!name || !email || !pass) { errEl.textContent = 'Preencha todos os campos.'; errEl.classList.add('show'); return; }
-  if (pass.length < 6) { errEl.textContent = 'Senha deve ter no mínimo 6 caracteres.'; errEl.classList.add('show'); return; }
-  btn.disabled = true; btn.textContent = 'Criando conta…';
+
+  errEl.classList.remove('show');
+  okEl.classList.remove('show');
+
+  if (!name || !email || !pass) {
+    errEl.textContent = 'Preencha todos os campos.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  if (pass.length < 6) {
+    errEl.textContent = 'Senha deve ter no mínimo 6 caracteres.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Criando conta…';
 
   const { data, error } = await sb.auth.signUp({
-    email, password: pass,
-    options: { data: { full_name: name } }
+    email,
+    password: pass,
+    options: {
+      emailRedirectTo: 'https://c-vanalyzer-ia.vercel.app',
+      data: { full_name: name }
+    }
   });
 
   if (error) {
-    btn.disabled = false; btn.textContent = 'Criar conta grátis';
-    errEl.textContent = traduzirErroAuth(error.message); errEl.classList.add('show'); return;
+    btn.disabled = false;
+    btn.textContent = 'Criar conta grátis';
+    errEl.textContent = traduzirErroAuth(error.message);
+    errEl.classList.add('show');
+    return;
   }
 
-  // FIX: Se "Email Confirmations" estiver desabilitado no Supabase, o signUp
-  // já retorna uma sessão ativa — o onAuthStateChange cuida do resto.
-  // Se estiver habilitado, data.session será null e pedimos para confirmar o e-mail.
   if (data.session) {
-    // Conta criada e já logada (confirmação desabilitada no Supabase)
-    // onAuthStateChange vai disparar e exibir o app automaticamente
     okEl.textContent = '✓ Conta criada! Entrando…';
     okEl.classList.add('show');
   } else {
-    // Confirmação de e-mail necessária (habilitada no painel Supabase)
-    btn.disabled = false; btn.textContent = 'Criar conta grátis';
-    okEl.innerHTML = '✓ Conta criada! <strong>Verifique sua caixa de entrada</strong> (e o spam) e clique no link enviado pelo CVAnalyzer para ativar sua conta. Depois volte aqui e faça login normalmente.';
+    btn.disabled = false;
+    btn.textContent = 'Criar conta grátis';
+    okEl.innerHTML = '✓ Conta criada! <strong>Verifique sua caixa de entrada</strong> e clique no link para confirmar seu e-mail.';
     okEl.classList.add('show');
-    // Muda para aba login após 4s
     setTimeout(() => showTab('login'), 4000);
   }
 }
-
 async function handleGoogleLogin() {
   const { data, error } = await sb.auth.signInWithOAuth({
     provider: 'google',
