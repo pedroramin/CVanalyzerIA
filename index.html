@@ -924,6 +924,25 @@
   </div>
 
 </div><!-- /appContent -->
+  <!-- ══ CONFIRMATION SCREEN ═══════════════════════════════════════════════════ -->
+<div id="confirmationScreen" style="display:none;">
+  <div class="auth-box" style="margin: 10vh auto 0;">
+    <div class="auth-logo">
+      <div class="tag-ia">IA</div>
+      <h1>CV<span>Analyzer</span></h1>
+      <p>Cadastro confirmado</p>
+    </div>
+
+    <div class="auth-success show" style="display:block; text-align:center; line-height:1.8;">
+      ✅ Seu e-mail foi confirmado com sucesso.<br>
+      Você já pode fechar esta tela e voltar ao login.
+    </div>
+
+    <button class="btn-auth" style="margin-top:16px;" onclick="closeConfirmationScreen()">
+      Ir para login
+    </button>
+  </div>
+</div>
 
 <!-- ══ BUY MODAL ══════════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="buyModal">
@@ -1966,6 +1985,47 @@ async function handleEmailConfirmationReturn() {
 }
 
 // roda quando abrir o site
+window.addEventListener('load', () => {
+  handleEmailConfirmationReturn();
+});
+
+  function openConfirmationScreen() {
+  document.getElementById('authWall').classList.add('hidden');
+  document.getElementById('appContent').classList.remove('visible');
+  document.getElementById('confirmationScreen').style.display = 'block';
+}
+
+function closeConfirmationScreen() {
+  document.getElementById('confirmationScreen').style.display = 'none';
+  document.getElementById('authWall').classList.remove('hidden');
+  document.getElementById('appContent').classList.remove('visible');
+  showTab('login');
+}
+
+async function handleEmailConfirmationReturn() {
+  const hash = window.location.hash || '';
+  const search = window.location.search || '';
+
+  const cameFromEmail =
+    hash.includes('access_token') ||
+    hash.includes('type=signup') ||
+    search.includes('access_token') ||
+    search.includes('type=signup');
+
+  if (!cameFromEmail) return;
+
+  // limpa a URL
+  window.history.replaceState({}, document.title, window.location.pathname);
+
+  // garante que não entra logado direto
+  await sb.auth.signOut();
+
+  currentUser = null;
+  coins = 0;
+
+  openConfirmationScreen();
+}
+
 window.addEventListener('load', () => {
   handleEmailConfirmationReturn();
 });
