@@ -1027,9 +1027,9 @@ const API_ENDPOINT    = '/api/analyze';                           // seu proxy A
 const SITE_URL = 'https://c-vanalyzer-ia.vercel.app';
 // Moedas são creditadas via código de resgate enviado por e-mail após o pagamento
 
-const COST_STANDARD  = 1;
-const COST_PREMIUM   = 3;
-const COST_GENERATOR = 5;
+const COST_STANDARD  = 0;
+const COST_PREMIUM   = 0;
+const COST_GENERATOR = 0;
 
 // Códigos de resgate são validados no Supabase (tabela redeem_codes) — não ficam expostos no front-end
 
@@ -1305,11 +1305,11 @@ async function grantCoins(amount) {
 }
 
 function updateWarning() {
-  const cost = currentMode === 'premium' ? COST_PREMIUM : currentMode === 'generator' ? COST_GENERATOR : COST_STANDARD;
   const w   = document.getElementById('coinWarning');
   const btn = document.getElementById('analyzeBtn');
-  if (coins < cost) { w.classList.add('show'); btn.disabled = true; }
-  else              { w.classList.remove('show'); btn.disabled = false; }
+
+  if (w) w.classList.remove('show');
+  if (btn) btn.disabled = false;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1353,13 +1353,13 @@ function setMode(mode) {
 
   if (mode === 'premium') {
     btn.className = 'btn-analyze premium-btn';
-    btn.innerHTML = '🎯 Analisar Match com Vaga <span class="btn-cost-badge" id="btnCostBadge">3 moedas</span>';
+btn.innerHTML = '✦ Analisar Currículo <span class="btn-cost-badge" id="btnCostBadge">grátis</span>';
   } else if (mode === 'generator') {
     btn.className = 'btn-analyze generator-btn';
-    btn.innerHTML = '✨ Gerar Meu Currículo <span class="btn-cost-badge" id="btnCostBadge">5 moedas</span>';
+btn.innerHTML = '🎯 Analisar Match com Vaga <span class="btn-cost-badge" id="btnCostBadge">grátis</span>';
   } else {
     btn.className = 'btn-analyze standard-btn';
-    btn.innerHTML = '✦ Analisar Currículo <span class="btn-cost-badge" id="btnCostBadge">1 moeda</span>';
+btn.innerHTML = '✨ Gerar Meu Currículo <span class="btn-cost-badge" id="btnCostBadge">grátis</span>';
   }
   updateWarning();
 }
@@ -1470,9 +1470,6 @@ function removeGenJobImage() {
 async function analyzeResume() {
   const errorEl = document.getElementById('errorMsg');
   errorEl.classList.remove('show');
-  const cost = currentMode === 'premium' ? COST_PREMIUM : currentMode === 'generator' ? COST_GENERATOR : COST_STANDARD;
-
-  if (coins < cost) { openBuyModal(); return; }
 
   if (currentMode === 'generator') {
     await runGenerator();
@@ -1480,106 +1477,233 @@ async function analyzeResume() {
   }
 
   const resumeText = document.getElementById('resumeText').value.trim();
+
   if (!uploadedFile && !resumeText) {
     errorEl.textContent = 'Envie seu currículo (PDF) ou cole o texto antes de analisar.';
-    errorEl.classList.add('show'); return;
+    errorEl.classList.add('show');
+    return;
   }
 
-  // Build messages
   const userContent = [];
+
   if (uploadedFile) {
-    userContent.push({ type: 'document', source: { type: 'base64', media_type: uploadedFile.mediaType, data: uploadedFile.base64 } });
-  }
-  if (currentMode === 'premium' && uploadedJob) {
-    userContent.push({ type: 'image', source: { type: 'base64', media_type: uploadedJob.mediaType, data: uploadedJob.base64 } });
+    userContent.push({
+      type: 'document',
+      source: {
+        type: 'base64',
+        media_type: uploadedFile.mediaType,
+        data: uploadedFile.base64
+      }
+    });
   }
 
-  const area  = document.getElementById('areaSelect')?.value || 'outro';
+  if (currentMode === 'premium' && uploadedJob) {
+    userContent.push({
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: uploadedJob.mediaType,
+        data: uploadedJob.base64
+      }
+    });
+  }
+
+  const area = document.getElementById('areaSelect')?.value || 'outro';
   const level = document.getElementById('levelSelect').value;
   const jobDesc = document.getElementById('jobDescText')?.value.trim() || '';
 
   let prompt = '';
+
   if (currentMode === 'standard') {
-    prompt = `Você é um recrutador sênior especialista em análise de currículos para vagas ${level} na área de ${area}. Analise o currículo abaixo de forma crítica e construtiva.\n\n${resumeText ? 'Currículo:\n' + resumeText : '[Currículo enviado como PDF acima]'}\n\nResponda OBRIGATORIAMENTE neste formato JSON:\n{\n  "score": <número 0-100>,\n  "sections": [\n    {\n      "icon": "<emoji>",\n      "title": "<título>",\n      "tag": "ok|warn|critical",\n      "content": "<análise detalhada em HTML com <ul><li>pontos</li></ul>"\n    }\n  ],\n  "upsell": true\n}\nNo mínimo 5 seções. Seja específico, cite exemplos do currículo.`;
+    prompt = `
+Você é um recrutador sênior especialista em análise de currículos para vagas ${level} na área de ${area}.
+
+Analise o currículo abaixo de forma crítica, profissional e construtiva.
+
+${resumeText ? `Currículo:\n${resumeText}` : '[Currículo enviado como PDF acima]'}
+
+Responda OBRIGATORIAMENTE em JSON neste formato:
+{
+  "score": 0,
+  "sections": [
+    {
+      "icon": "📌",
+      "title": "Título da análise",
+      "tag": "ok",
+      "content": "<ul><li>Ponto 1</li><li>Ponto 2</li></ul>"
+    }
+  ],
+  "upsell": true
+}
+
+Regras:
+- score deve ser um número de 0 a 100
+- crie no mínimo 5 seções
+- "tag" deve ser apenas: "ok", "warn" ou "critical"
+- "content" deve vir em HTML simples
+- seja específico e cite melhorias reais de recrutamento
+`;
   } else {
-    prompt = `Você é um especialista em recrutamento. Analise a compatibilidade entre o currículo e a vaga fornecida.\n\nCurrículo: ${resumeText || '[PDF acima]'}\n${jobDesc ? 'Descrição adicional da vaga: ' + jobDesc : ''}\n${uploadedJob ? '[Print da vaga enviado como imagem acima]' : ''}\n\nResponda OBRIGATORIAMENTE neste formato JSON:\n{\n  "score": <0-100>,\n  "matchPct": <0-100>,\n  "matchDesc": "<1 frase sobre compatibilidade>",\n  "sections": [\n    {\n      "icon": "<emoji>",\n      "title": "<título>",\n      "tag": "ok|warn|critical|match",\n      "content": "<análise em HTML>"\n    }\n  ]\n}`;
+    prompt = `
+Você é um especialista em recrutamento.
+
+Analise a compatibilidade entre o currículo e a vaga fornecida.
+
+${resumeText ? `Currículo:\n${resumeText}` : '[Currículo enviado como PDF acima]'}
+${jobDesc ? `Descrição adicional da vaga:\n${jobDesc}` : ''}
+${uploadedJob ? '[Print da vaga enviado como imagem acima]' : ''}
+
+Responda OBRIGATORIAMENTE em JSON neste formato:
+{
+  "score": 0,
+  "matchPct": 0,
+  "matchDesc": "1 frase sobre compatibilidade",
+  "sections": [
+    {
+      "icon": "📌",
+      "title": "Título da análise",
+      "tag": "match",
+      "content": "<ul><li>Ponto 1</li><li>Ponto 2</li></ul>"
+    }
+  ]
+}
+
+Regras:
+- score deve ser um número de 0 a 100
+- matchPct deve ser um número de 0 a 100
+- crie no mínimo 5 seções
+- "tag" deve ser apenas: "ok", "warn", "critical" ou "match"
+- "content" deve vir em HTML simples
+`;
   }
 
-  userContent.push({ type: 'text', text: prompt });
+  userContent.push({
+    type: 'text',
+    text: prompt
+  });
 
-  // Show loading
   document.getElementById('inputSection').style.display = 'none';
   document.getElementById('loadingSection').classList.add('show');
   document.getElementById('loaderBar').className = 'loader-bar-inner ' + currentMode;
-  document.getElementById('loadingText').textContent = currentMode === 'premium' ? 'Analisando compatibilidade com a vaga…' : 'Analisando seu currículo com IA…';
+  document.getElementById('loadingText').textContent =
+    currentMode === 'premium'
+      ? 'Analisando compatibilidade com a vaga…'
+      : 'Analisando seu currículo com IA…';
 
   try {
-    // Deduct coins optimistically
-    await deductCoins(cost);
-
     const response = await fetch(API_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-opus-4-5',
+        model: 'claude-3-5-sonnet-latest',
         max_tokens: 2000,
-        messages: [{ role: 'user', content: userContent }]
+        messages: [
+          {
+            role: 'user',
+            content: userContent
+          }
+        ]
       })
     });
 
-    if (!response.ok) throw new Error('Erro na API');
     const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Erro ao analisar currículo');
+    }
+
     const rawText = data.content?.[0]?.text || '';
-
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('Resposta inválida da IA');
-    const result = JSON.parse(jsonMatch[0]);
 
-    // Log usage no Supabase
-    await sb.from('usage_logs').insert({
-      user_id: currentUser.id,
-      mode: currentMode,
-      coins_used: cost,
-      score: result.score
-    });
+    if (!jsonMatch) {
+      throw new Error('A IA não retornou JSON válido');
+    }
+
+    const result = JSON.parse(jsonMatch[0]);
 
     document.getElementById('loadingSection').classList.remove('show');
     renderResults(result);
   } catch (err) {
-    // Devolver moedas em caso de erro
-    await grantCoins(cost);
     document.getElementById('loadingSection').classList.remove('show');
     document.getElementById('inputSection').style.display = 'block';
-    errorEl.textContent = '⚠ Erro ao analisar. Suas moedas foram devolvidas. Tente novamente.';
+    errorEl.textContent = '⚠ Erro ao analisar: ' + err.message;
     errorEl.classList.add('show');
   }
 }
 
 async function runGenerator() {
-  const cost = COST_GENERATOR;
-  const jobText  = document.getElementById('genJobText').value.trim();
+  const errorEl = document.getElementById('errorMsg');
+  errorEl.classList.remove('show');
+
+  const jobText = document.getElementById('genJobText').value.trim();
   const hasChoiceYes = document.getElementById('genChoiceYes').classList.contains('active');
 
   if (!uploadedGenJob && !jobText) {
-    document.getElementById('errorMsg').textContent = 'Informe a vaga (print ou texto) para gerar o currículo.';
-    document.getElementById('errorMsg').classList.add('show'); return;
+    errorEl.textContent = 'Informe a vaga (print ou texto) para gerar o currículo.';
+    errorEl.classList.add('show');
+    return;
   }
 
   const userContent = [];
-  if (uploadedGenJob) userContent.push({ type: 'image', source: { type: 'base64', media_type: uploadedGenJob.mediaType, data: uploadedGenJob.base64 } });
+
+  if (uploadedGenJob) {
+    userContent.push({
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: uploadedGenJob.mediaType,
+        data: uploadedGenJob.base64
+      }
+    });
+  }
 
   let sourceText = '';
+
   if (hasChoiceYes) {
     sourceText = document.getElementById('genOldResume').value.trim();
-    if (!sourceText) { document.getElementById('errorMsg').textContent = 'Cole seu currículo atual no campo acima.'; document.getElementById('errorMsg').classList.add('show'); return; }
+
+    if (!sourceText) {
+      errorEl.textContent = 'Cole seu currículo atual no campo acima.';
+      errorEl.classList.add('show');
+      return;
+    }
   } else {
     const name = document.getElementById('gqName').value.trim();
     const area = document.getElementById('gqArea').value.trim();
-    if (!name || !area) { document.getElementById('errorMsg').textContent = 'Preencha nome e área profissional.'; document.getElementById('errorMsg').classList.add('show'); return; }
-    sourceText = `Nome: ${name}\nÁrea: ${area}\nE-mail: ${document.getElementById('gqEmail').value}\nContato: ${document.getElementById('gqContact').value}\nFormação: ${document.getElementById('gqEducation').value}\nExperiências: ${document.getElementById('gqExperience').value}\nHabilidades: ${document.getElementById('gqSkills').value}`;
+
+    if (!name || !area) {
+      errorEl.textContent = 'Preencha nome e área profissional.';
+      errorEl.classList.add('show');
+      return;
+    }
+
+    sourceText = `Nome: ${name}
+Área: ${area}
+E-mail: ${document.getElementById('gqEmail').value}
+Contato: ${document.getElementById('gqContact').value}
+Formação: ${document.getElementById('gqEducation').value}
+Experiências: ${document.getElementById('gqExperience').value}
+Habilidades: ${document.getElementById('gqSkills').value}`;
   }
 
-  userContent.push({ type: 'text', text: `Você é um especialista em currículos. Gere um currículo profissional completo em português brasileiro.\n\nDados do candidato:\n${sourceText}\n\n${jobText ? 'Vaga desejada:\n' + jobText : ''}${uploadedGenJob ? '\n[Print da vaga enviado como imagem acima]' : ''}\n\nGere o currículo em texto puro estruturado, sem JSON. Comece com o nome em maiúsculas, depois cargo/área, contato, e use títulos de seção em maiúsculas (EXPERIÊNCIA, FORMAÇÃO, HABILIDADES, etc.). Use bullet points com "-" para listas. Linguagem de impacto, verbos de ação, otimizado para ATS.` });
+  userContent.push({
+    type: 'text',
+    text: `Você é um especialista em currículos.
+
+Gere um currículo profissional completo em português brasileiro.
+
+Dados do candidato:
+${sourceText}
+
+${jobText ? `Vaga desejada:\n${jobText}` : ''}
+${uploadedGenJob ? '\n[Print da vaga enviado como imagem acima]' : ''}
+
+Gere o currículo em texto puro estruturado, sem JSON.
+Comece com o nome em maiúsculas, depois cargo/área, contato, e use títulos de seção em maiúsculas:
+EXPERIÊNCIA, FORMAÇÃO, HABILIDADES, etc.
+Use bullet points com "-" para listas.
+Linguagem de impacto, verbos de ação e otimização para ATS.`
+  });
 
   document.getElementById('inputSection').style.display = 'none';
   document.getElementById('loadingSection').classList.add('show');
@@ -1587,24 +1711,36 @@ async function runGenerator() {
   document.getElementById('loadingText').textContent = 'Gerando seu currículo profissional…';
 
   try {
-    await deductCoins(cost);
     const response = await fetch(API_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 2000, messages: [{ role: 'user', content: userContent }] })
+      body: JSON.stringify({
+        model: 'claude-3-5-sonnet-latest',
+        max_tokens: 2000,
+        messages: [
+          {
+            role: 'user',
+            content: userContent
+          }
+        ]
+      })
     });
-    if (!response.ok) throw new Error('Erro');
+
     const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Erro ao gerar currículo');
+    }
+
     const rawText = data.content?.[0]?.text || '';
-    await sb.from('usage_logs').insert({ user_id: currentUser.id, mode: 'generator', coins_used: cost });
+
     document.getElementById('loadingSection').classList.remove('show');
     renderGeneratedCv(rawText);
-  } catch {
-    await grantCoins(cost);
+  } catch (err) {
     document.getElementById('loadingSection').classList.remove('show');
     document.getElementById('inputSection').style.display = 'block';
-    document.getElementById('errorMsg').textContent = '⚠ Erro ao gerar currículo. Suas moedas foram devolvidas.';
-    document.getElementById('errorMsg').classList.add('show');
+    errorEl.textContent = '⚠ Erro ao gerar currículo: ' + err.message;
+    errorEl.classList.add('show');
   }
 }
 
