@@ -865,9 +865,9 @@
     </div>
 
     <button class="btn-analyze standard-btn" id="analyzeBtn" onclick="analyzeResume()">
-      ✦ Analisar Currículo
-      <span class="btn-cost-badge" id="btnCostBadge">1 moeda</span>
-    </button>
+  ✦ Analisar Currículo
+  <span class="btn-cost-badge" id="btnCostBadge">grátis</span>
+</button>
 
     <div class="error-msg" id="errorMsg"></div>
   </div>
@@ -1327,43 +1327,45 @@ function showToast(msg, type = '') {
 // ═══════════════════════════════════════════════════════════════════════════════
 function setMode(mode) {
   currentMode = mode;
-  const cardS    = document.getElementById('modeCardStandard');
-  const cardP    = document.getElementById('modeCardPremium');
-  const cardG    = document.getElementById('modeCardGenerator');
-  const panel    = document.getElementById('premiumPanel');
+
+  const cardS = document.getElementById('modeCardStandard');
+  const cardP = document.getElementById('modeCardPremium');
+  const cardG = document.getElementById('modeCardGenerator');
+  const panel = document.getElementById('premiumPanel');
   const genPanel = document.getElementById('generatorPanel');
-  const btn      = document.getElementById('analyzeBtn');
+  const btn = document.getElementById('analyzeBtn');
   const areaGroup = document.getElementById('areaGroup');
-  const cvArea   = document.getElementById('dropZone');
+  const cvArea = document.getElementById('dropZone');
   const cvFileInfo = document.getElementById('fileInfo');
-  const orDiv    = document.getElementById('orDivider');
+  const orDiv = document.getElementById('orDivider');
   const textAreaWrap = document.getElementById('textareaWrapper');
 
-  cardS.className = 'mode-card' + (mode === 'standard'  ? ' active-standard'  : '');
-  cardP.className = 'mode-card' + (mode === 'premium'   ? ' active-premium'   : '');
+  cardS.className = 'mode-card' + (mode === 'standard' ? ' active-standard' : '');
+  cardP.className = 'mode-card' + (mode === 'premium' ? ' active-premium' : '');
   cardG.className = 'mode-card' + (mode === 'generator' ? ' active-generator' : '');
 
   panel.classList.toggle('show', mode === 'premium');
   genPanel.classList.toggle('show', mode === 'generator');
-  areaGroup.style.display    = mode === 'standard' ? '' : 'none';
-  cvArea.style.display       = mode === 'generator' ? 'none' : '';
-  orDiv.style.display        = mode === 'generator' ? 'none' : '';
+
+  areaGroup.style.display = mode === 'standard' ? '' : 'none';
+  cvArea.style.display = mode === 'generator' ? 'none' : '';
+  orDiv.style.display = mode === 'generator' ? 'none' : '';
   textAreaWrap.style.display = mode === 'generator' ? 'none' : '';
   if (mode !== 'generator') cvFileInfo.style.display = '';
 
   if (mode === 'premium') {
     btn.className = 'btn-analyze premium-btn';
-btn.innerHTML = '✦ Analisar Currículo <span class="btn-cost-badge" id="btnCostBadge">grátis</span>';
+    btn.innerHTML = '🎯 Analisar Match com Vaga <span class="btn-cost-badge" id="btnCostBadge">grátis</span>';
   } else if (mode === 'generator') {
     btn.className = 'btn-analyze generator-btn';
-btn.innerHTML = '🎯 Analisar Match com Vaga <span class="btn-cost-badge" id="btnCostBadge">grátis</span>';
+    btn.innerHTML = '✨ Gerar Meu Currículo <span class="btn-cost-badge" id="btnCostBadge">grátis</span>';
   } else {
     btn.className = 'btn-analyze standard-btn';
-btn.innerHTML = '✨ Gerar Meu Currículo <span class="btn-cost-badge" id="btnCostBadge">grátis</span>';
+    btn.innerHTML = '✦ Analisar Currículo <span class="btn-cost-badge" id="btnCostBadge">grátis</span>';
   }
+
   updateWarning();
 }
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── FILE UPLOADS ──────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -2125,7 +2127,7 @@ window.addEventListener('load', () => {
   handleEmailConfirmationReturn();
 });
 
-  function openConfirmationScreen() {
+function openConfirmationScreen() {
   document.getElementById('authWall').classList.add('hidden');
   document.getElementById('appContent').classList.remove('visible');
   document.getElementById('confirmationScreen').style.display = 'block';
@@ -2150,10 +2152,8 @@ async function handleEmailConfirmationReturn() {
 
   if (!cameFromEmail) return;
 
-  // limpa a URL
   window.history.replaceState({}, document.title, window.location.pathname);
 
-  // garante que não entra logado direto
   await sb.auth.signOut();
 
   currentUser = null;
