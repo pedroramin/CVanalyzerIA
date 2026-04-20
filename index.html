@@ -1291,7 +1291,7 @@ async function saveCoins(newCoins) {
   coins = newCoins;
   updateCoins();
   if (!currentUser) return;
-  await sb.from('users').update({ coins }).eq('id', currentUser.id);
+  await sb.from('wallets').update({ coins }).eq('id', currentUser.id);
 }
 
 async function deductCoins(amount) {
