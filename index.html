@@ -1027,9 +1027,9 @@ const API_ENDPOINT    = '/api/analyze';                           // seu proxy A
 const SITE_URL = 'https://c-vanalyzer-ia.vercel.app';
 // Moedas são creditadas via código de resgate enviado por e-mail após o pagamento
 
-const COST_STANDARD  = 0;
-const COST_PREMIUM   = 0;
-const COST_GENERATOR = 0;
+const COST_STANDARD  = 1;
+const COST_PREMIUM   = 3;
+const COST_GENERATOR = 5;
 
 // Códigos de resgate são validados no Supabase (tabela redeem_codes) — não ficam expostos no front-end
 
@@ -1227,16 +1227,14 @@ sb.auth.onAuthStateChange(async (event, session) => {
 async function loadUserProfile() {
   if (!currentUser) return;
 
-  // ── Etapa 1: tenta buscar o perfil existente ─────────────────────────────
   const { data: existing, error: fetchErr } = await sb
-    .from('users')
+    .from('wallets')
     .select('coins')
-    .eq('id', currentUser.id)
+    .eq('user_id', currentUser.id)
     .maybeSingle();
 
   if (fetchErr) {
-    // RLS pode bloquear o SELECT em edge cases — não trava, usa 0
-    console.warn('[profile] SELECT falhou (RLS?):', fetchErr.message);
+    console.warn('[wallet] SELECT falhou:', fetchErr.message);
     coins = 0;
     return;
   }
@@ -1246,10 +1244,9 @@ async function loadUserProfile() {
     return;
   }
 
-  // ── Etapa 2: perfil não existe, cria agora ────────────────────────────────
   const { data: inserted, error: insertErr } = await sb
-    .from('users')
-    .insert({ id: currentUser.id, email: currentUser.email, coins: 0 })
+    .from('wallets')
+    .insert({ user_id: currentUser.id, coins: 0 })
     .select('coins')
     .single();
 
@@ -1258,13 +1255,14 @@ async function loadUserProfile() {
     return;
   }
 
-  // ── Etapa 3: insert falhou (race condition ou RLS) — busca de novo ─────────
-  console.warn('[profile] INSERT falhou:', insertErr.message, '| code:', insertErr.code);
+  console.warn('[wallet] INSERT falhou:', insertErr.message, '| code:', insertErr.code);
+
   const { data: retry } = await sb
-    .from('users')
+    .from('wallets')
     .select('coins')
-    .eq('id', currentUser.id)
+    .eq('user_id', currentUser.id)
     .maybeSingle();
+
   coins = retry?.coins ?? 0;
 }
 
@@ -1291,9 +1289,16 @@ async function saveCoins(newCoins) {
   coins = newCoins;
   updateCoins();
   if (!currentUser) return;
-  await sb.from('wallets').update({ coins }).eq('id', currentUser.id);
-}
 
+  const { error } = await sb
+    .from('wallets')
+    .update({ coins })
+    .eq('user_id', currentUser.id);
+
+  if (error) {
+    console.error('[wallet] erro ao salvar coins:', error);
+  }
+}
 async function deductCoins(amount) {
   const newCoins = coins - amount;
   await saveCoins(newCoins);
@@ -1305,11 +1310,20 @@ async function grantCoins(amount) {
 }
 
 function updateWarning() {
-  const w   = document.getElementById('coinWarning');
+  const w = document.getElementById('coinWarning');
   const btn = document.getElementById('analyzeBtn');
 
-  if (w) w.classList.remove('show');
-  if (btn) btn.disabled = false;
+  let cost = COST_STANDARD;
+  if (currentMode === 'premium') cost = COST_PREMIUM;
+  if (currentMode === 'generator') cost = COST_GENERATOR;
+
+  if (coins < cost) {
+    if (w) w.classList.add('show');
+    if (btn) btn.disabled = true;
+  } else {
+    if (w) w.classList.remove('show');
+    if (btn) btn.disabled = false;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1470,7 +1484,15 @@ function removeGenJobImage() {
 // ── ANALYZE ───────────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 async function analyzeResume() {
-  const errorEl = document.getElementById('errorMsg');
+  const let cost = COST_STANDARD;
+if (currentMode === 'premium') cost = COST_PREMIUM;
+
+if (coins < cost) {
+  errorEl.textContent = 'Moedas insuficientes para analisar.';
+  errorEl.classList.add('show');
+  return;
+}
+  = document.getElementById('errorMsg');
   errorEl.classList.remove('show');
 
   if (currentMode === 'generator') {
@@ -1656,6 +1678,11 @@ errorEl.textContent = '⚠ Erro ao analisar: ' + (err?.message || JSON.stringify
 }
 
 async function runGenerator() {
+  if (coins < COST_GENERATOR) {
+  errorEl.textContent = 'Moedas insuficientes para gerar currículo.';
+  errorEl.classList.add('show');
+  return;
+}
   const errorEl = document.getElementById('errorMsg');
   errorEl.classList.remove('show');
 
@@ -1765,6 +1792,7 @@ throw new Error(
 
     document.getElementById('loadingSection').classList.remove('show');
     renderGeneratedCv(rawText);
+    await deductCoins(COST_GENERATOR);
     try {
   const { error: historyError } = await sb.from('analysis_history').insert({
     user_id: currentUser.id,
@@ -1791,7 +1819,7 @@ errorEl.textContent = '⚠ Erro ao gerar currículo: ' + (err?.message || JSON.s
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── RENDER RESULTS ────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
-function renderResults(result) {
+function renderResults(result) await deductCoins(cost); {
   const score = result.score || 0;
   document.getElementById('scoreDisplay').textContent = score;
   document.getElementById('scoreDisplay').style.color = score >= 70 ? 'var(--accent)' : score >= 50 ? 'var(--gold)' : 'var(--danger)';
