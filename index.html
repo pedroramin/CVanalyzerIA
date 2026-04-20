@@ -1629,15 +1629,24 @@ throw new Error(
     const result = JSON.parse(jsonMatch[0]);
 
     document.getElementById('loadingSection').classList.remove('show');
-    renderResults(result);
-    try {
-  await sb.from('analysis_history').insert({
+   renderResults(result);
+
+try {
+  const { error: historyError } = await sb.from('analysis_history').insert({
     user_id: currentUser.id,
     type: currentMode,
     score: result.score || 0
   });
+
+  if (historyError) {
+    console.error('Erro ao salvar histórico:', historyError);
+    showToast('Histórico não foi salvo', '');
+  } else {
+    console.log('Histórico salvo com sucesso');
+  }
 } catch (e) {
   console.error('Erro ao salvar histórico:', e);
+  showToast('Histórico não foi salvo', '');
 }
   } catch (err) {
     document.getElementById('loadingSection').classList.remove('show');
@@ -1756,6 +1765,21 @@ throw new Error(
 
     document.getElementById('loadingSection').classList.remove('show');
     renderGeneratedCv(rawText);
+    try {
+  const { error: historyError } = await sb.from('analysis_history').insert({
+    user_id: currentUser.id,
+    type: 'generator',
+    score: 0
+  });
+
+  if (historyError) {
+    console.error('Erro ao salvar histórico do gerador:', historyError);
+  } else {
+    console.log('Histórico do gerador salvo com sucesso');
+  }
+} catch (e) {
+  console.error('Erro ao salvar histórico do gerador:', e);
+}
   } catch (err) {
     document.getElementById('loadingSection').classList.remove('show');
     document.getElementById('inputSection').style.display = 'block';
@@ -2113,37 +2137,6 @@ async function redeemCode() {
   }
 }
 
-  // ✅ TRATAR RETORNO DO EMAIL DE CONFIRMAÇÃO
-async function handleEmailConfirmationReturn() {
-  const hash = window.location.hash;
-
-  if (hash && hash.includes("access_token")) {
-    // Remove o hash da URL
-    window.history.replaceState({}, document.title, window.location.pathname);
-
-    // Faz logout automático pra não entrar direto
-    await sb.auth.signOut();
-
-    // Mostra mensagem bonita
-    const okEl = document.getElementById('registerSuccess');
-    const errEl = document.getElementById('registerError');
-
-    if (okEl) {
-      okEl.innerHTML = '✅ Email confirmado com sucesso! Agora faça login.';
-      okEl.classList.add('show');
-    }
-
-    if (errEl) errEl.classList.remove('show');
-
-    // Garante que fica na tela de login
-    showTab('login');
-  }
-}
-
-// roda quando abrir o site
-window.addEventListener('load', () => {
-  handleEmailConfirmationReturn();
-});
 
 function openConfirmationScreen() {
   document.getElementById('authWall').classList.add('hidden');
