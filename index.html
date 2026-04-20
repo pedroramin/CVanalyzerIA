@@ -1630,6 +1630,15 @@ throw new Error(
 
     document.getElementById('loadingSection').classList.remove('show');
     renderResults(result);
+    try {
+  await sb.from('analysis_history').insert({
+    user_id: currentUser.id,
+    type: currentMode,
+    score: result.score || 0
+  });
+} catch (e) {
+  console.error('Erro ao salvar histórico:', e);
+}
   } catch (err) {
     document.getElementById('loadingSection').classList.remove('show');
     document.getElementById('inputSection').style.display = 'block';
