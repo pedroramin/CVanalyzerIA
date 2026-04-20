@@ -2002,22 +2002,29 @@ function openRedeemModal() {
 function closeRedeemModal() { document.getElementById('redeemModal').classList.remove('show'); }
 
 async function redeemCode() {
-  const raw   = document.getElementById('redeemInput').value.trim().toUpperCase();
+  const raw = document.getElementById('redeemInput').value.trim().toUpperCase();
   const msgEl = document.getElementById('redeemMsg');
-
-  // FIX: busca o botão pelo ID para evitar querySelector falhar se o DOM mudar
   const btn = document.getElementById('btnRedeem');
 
-  if (!raw) { msgEl.textContent = 'Digite um código.'; msgEl.className = 'redeem-msg err'; return; }
-  if (!currentUser) { msgEl.textContent = 'Você precisa estar logado.'; msgEl.className = 'redeem-msg err'; return; }
+  if (!raw) {
+    msgEl.textContent = 'Digite um código.';
+    msgEl.className = 'redeem-msg err';
+    return;
+  }
 
-  // Garante que o botão é desabilitado e sempre reabilitado no finally
-  if (btn) { btn.disabled = true; btn.textContent = 'Verificando…'; }
+  if (!currentUser) {
+    msgEl.textContent = 'Você precisa estar logado.';
+    msgEl.className = 'redeem-msg err';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Verificando…';
   msgEl.textContent = 'Verificando código…';
   msgEl.className = 'redeem-msg';
 
   try {
-    // ── ETAPA 1: Verifica se o usuário já usou esse código ────────────────────
+    // 1) verifica se este usuário já usou este código
     const { data: alreadyUsed, error: usedErr } = await sb
       .from('redeemed_codes')
       .select('id')
@@ -2026,17 +2033,17 @@ async function redeemCode() {
       .maybeSingle();
 
     if (usedErr) {
-      console.error('[redeem] Etapa 1 (verificar uso):', usedErr.message);
-      throw new Error('Erro ao verificar histórico de uso. Tente novamente.');
+      console.error('[redeem] verificar uso:', usedErr);
+      throw new Error('Erro ao verificar histórico de uso.');
     }
 
     if (alreadyUsed) {
       msgEl.textContent = '✕ Você já utilizou este código.';
       msgEl.className = 'redeem-msg err';
-      return; // finally vai reabilitar o botão
+      return;
     }
 
-    // ── ETAPA 2: Busca o código na tabela redeem_codes ────────────────────────
+    // 2) busca o código
     const { data: codeRow, error: codeErr } = await sb
       .from('redeem_codes')
       .select('id, coins, uses, max_uses')
@@ -2044,8 +2051,8 @@ async function redeemCode() {
       .maybeSingle();
 
     if (codeErr) {
-      console.error('[redeem] Etapa 2 (buscar código):', codeErr.message);
-      throw new Error('Erro ao validar o código. Tente novamente.');
+      console.error('[redeem] buscar código:', codeErr);
+      throw new Error('Erro ao validar o código.');
     }
 
     if (!codeRow) {
@@ -2054,118 +2061,104 @@ async function redeemCode() {
       return;
     }
 
-    // ── ETAPA 3: Verifica limite de usos ──────────────────────────────────────
     if (codeRow.max_uses !== null && (codeRow.uses || 0) >= codeRow.max_uses) {
-      msgEl.textContent = '✕ Código esgotado (limite de usos atingido).';
+      msgEl.textContent = '✕ Código esgotado.';
       msgEl.className = 'redeem-msg err';
       return;
     }
 
-    const coinsToGrant = codeRow.coins;
-    if (!coinsToGrant || coinsToGrant <= 0) {
-      throw new Error('Código sem moedas associadas. Contate o suporte.');
+    const coinsToGrant = Number(codeRow.coins || 0);
+
+    if (coinsToGrant <= 0) {
+      throw new Error('Código sem moedas associadas.');
     }
 
-    // ── ETAPA 4: Registra o uso em redeemed_codes (unique evita race condition) ──
-    const { error: insertErr } = await sb
+    // 3) registra o resgate
+    const { error: insertRedeemErr } = await sb
       .from('redeemed_codes')
       .insert({
-        user_id:     currentUser.id,
-        code:        raw,
-        coins:       coinsToGrant,
+        user_id: currentUser.id,
+        code: raw,
+        coins: coinsToGrant,
         redeemed_at: new Date().toISOString()
       });
 
-    if (insertErr) {
-      // Unique constraint violado = código já usado por esta conta
-      if (insertErr.code === '23505') {
+    if (insertRedeemErr) {
+      if (insertRedeemErr.code === '23505') {
         msgEl.textContent = '✕ Você já utilizou este código.';
         msgEl.className = 'redeem-msg err';
         return;
       }
-      console.error('[redeem] Etapa 4 (registrar uso):', insertErr.message);
-      throw new Error('Erro ao registrar uso do código. Tente novamente.');
+
+      console.error('[redeem] registrar uso:', insertRedeemErr);
+      throw new Error('Erro ao registrar uso do código.');
     }
 
-    // ── ETAPA 5: Incrementa contador de usos do código ───────────────────────
-    const { error: updateErr } = await sb
+    // 4) incrementa uso do código
+    const { error: updateUsesErr } = await sb
       .from('redeem_codes')
       .update({ uses: (codeRow.uses || 0) + 1 })
       .eq('id', codeRow.id);
 
-    if (updateErr) {
-      // Não crítico — loga mas não bloqueia
-      console.warn('[redeem] Etapa 5 (incrementar uses):', updateErr.message);
+    if (updateUsesErr) {
+      console.warn('[redeem] incrementar uses:', updateUsesErr);
     }
 
-    // ── ETAPA 6: Credita moedas ───────────────────────────────────────────────
-    // Tenta via RPC increment_coins primeiro (atômico). Se falhar, usa update direto.
-    let coinsOk = false;
+    // 5) busca wallet atual
+    const { data: walletRow, error: walletErr } = await sb
+      .from('wallets')
+      .select('coins')
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
 
-    const { error: rpcErr } = await sb.rpc('increment_coins', {
-      user_id_input: currentUser.id,
-      amount:        coinsToGrant,
-    });
+    if (walletErr) {
+      console.error('[redeem] buscar wallet:', walletErr);
+      throw new Error('Erro ao localizar carteira do usuário.');
+    }
 
-    if (!rpcErr) {
-      coinsOk = true;
-      // Recarrega saldo real do banco após RPC
-      const { data: updated, error: fetchErr } = await sb
+    let newCoins = coinsToGrant;
+
+    if (!walletRow) {
+      const { error: createWalletErr } = await sb
         .from('wallets')
-.select('coins')
-.eq('user_id', currentUser.id)
-        .single();
-      if (!fetchErr && updated) {
-        coins = updated.coins;
-      } else {
-        coins += coinsToGrant; // fallback otimista
+        .insert({
+          user_id: currentUser.id,
+          coins: coinsToGrant
+        });
+
+      if (createWalletErr) {
+        console.error('[redeem] criar wallet:', createWalletErr);
+        throw new Error('Erro ao criar carteira do usuário.');
       }
-      updateCoins();
     } else {
-      console.warn('[redeem] RPC increment_coins falhou:', rpcErr.message, '— usando update direto');
+      newCoins = Number(walletRow.coins || 0) + coinsToGrant;
 
-     // Fallback: update direto na tabela wallets
-const { data: currentProfile, error: profileErr } = await sb
-  .from('wallets')
-  .select('coins')
-  .eq('user_id', currentUser.id)
-  .single();
+      const { error: updateWalletErr } = await sb
+        .from('wallets')
+        .update({ coins: newCoins })
+        .eq('user_id', currentUser.id);
 
-if (profileErr || !currentProfile) {
-  console.error('[redeem] Etapa 6 fallback (buscar perfil):', profileErr?.message);
-  throw new Error('Moedas não puderam ser creditadas. Contate o suporte com o código: ' + raw);
-}
-
-const newCoins = (currentProfile.coins || 0) + coinsToGrant;
-const { error: updateCoinsErr } = await sb
-  .from('wallets')
-  .update({ coins: newCoins })
-  .eq('user_id', currentUser.id);
-      if (updateCoinsErr) {
-        console.error('[redeem] Etapa 6 fallback (update coins):', updateCoinsErr.message);
-        throw new Error('Moedas não puderam ser creditadas. Contate o suporte com o código: ' + raw);
+      if (updateWalletErr) {
+        console.error('[redeem] atualizar wallet:', updateWalletErr);
+        throw new Error('Erro ao adicionar moedas na carteira.');
       }
-
-      coins = newCoins;
-      updateCoins();
-      coinsOk = true;
     }
 
-    // ── Sucesso ───────────────────────────────────────────────────────────────
-    if (coinsOk) {
-      msgEl.textContent = '✓ +' + coinsToGrant + ' moedas adicionadas à sua conta!';
-      msgEl.className = 'redeem-msg ok';
-      showToast('🎉 +' + coinsToGrant + ' moedas resgatadas!', 'gold');
-      setTimeout(closeRedeemModal, 2200);
-    }
+    coins = newCoins;
+    updateCoins();
 
+    msgEl.textContent = `✓ +${coinsToGrant} moedas adicionadas à sua conta!`;
+    msgEl.className = 'redeem-msg ok';
+    showToast(`🎉 +${coinsToGrant} moedas resgatadas!`, 'gold');
+
+    setTimeout(closeRedeemModal, 1800);
   } catch (err) {
-    console.error('[redeem] Erro geral:', err.message);
-    msgEl.textContent = '⚠ ' + (err.message || 'Erro ao validar código. Tente novamente.');
+    console.error('[redeem] erro geral:', err);
+    msgEl.textContent = '⚠ ' + (err?.message || 'Erro ao validar código.');
     msgEl.className = 'redeem-msg err';
   } finally {
-    // FIX: sempre reabilita o botão, mesmo que a função tenha retornado cedo
-    if (btn) { btn.disabled = false; btn.textContent = 'Resgatar'; }
+    btn.disabled = false;
+    btn.textContent = 'Resgatar';
   }
 }
 
