@@ -1824,7 +1824,7 @@ Linguagem de impacto, verbos de ação e otimização para ATS.`
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── RENDER RESULTS ────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
-function renderResults(result) await deductCoins(cost); {
+function renderResults(result) {
   const score = result.score || 0;
   document.getElementById('scoreDisplay').textContent = score;
   document.getElementById('scoreDisplay').style.color = score >= 70 ? 'var(--accent)' : score >= 50 ? 'var(--gold)' : 'var(--danger)';
@@ -2124,24 +2124,23 @@ async function redeemCode() {
     } else {
       console.warn('[redeem] RPC increment_coins falhou:', rpcErr.message, '— usando update direto');
 
-      // Fallback: update direto na tabela users
-      const { data: currentProfile, error: profileErr } = await sb
-        .from('users')
-        .select('coins')
-        .eq('id', currentUser.id)
-        .single();
+     // Fallback: update direto na tabela wallets
+const { data: currentProfile, error: profileErr } = await sb
+  .from('wallets')
+  .select('coins')
+  .eq('user_id', currentUser.id)
+  .single();
 
-      if (profileErr || !currentProfile) {
-        console.error('[redeem] Etapa 6 fallback (buscar perfil):', profileErr?.message);
-        throw new Error('Moedas não puderam ser creditadas. Contate o suporte com o código: ' + raw);
-      }
+if (profileErr || !currentProfile) {
+  console.error('[redeem] Etapa 6 fallback (buscar perfil):', profileErr?.message);
+  throw new Error('Moedas não puderam ser creditadas. Contate o suporte com o código: ' + raw);
+}
 
-      const newCoins = (currentProfile.coins || 0) + coinsToGrant;
-      const { error: updateCoinsErr } = await sb
-        .from('wallets')
-.update({ coins: newCoins })
-.eq('user_id', currentUser.id)
-
+const newCoins = (currentProfile.coins || 0) + coinsToGrant;
+const { error: updateCoinsErr } = await sb
+  .from('wallets')
+  .update({ coins: newCoins })
+  .eq('user_id', currentUser.id);
       if (updateCoinsErr) {
         console.error('[redeem] Etapa 6 fallback (update coins):', updateCoinsErr.message);
         throw new Error('Moedas não puderam ser creditadas. Contate o suporte com o código: ' + raw);
