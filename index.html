@@ -684,10 +684,9 @@
         <span class="coin-count" id="coinCount">0 <span>moedas</span></span>
       </div>
     </div>
-    <div class="coin-actions">
-      <button class="btn-buy" onclick="openBuyModal()">+ Comprar moedas</button>
-      <button class="btn-redeem" onclick="openRedeemModal()">Resgatar código</button>
-    </div>
+   <div class="coin-actions">
+  <button class="btn-buy" onclick="openBuyModal()">+ Comprar moedas</button>
+</div>
   </div>
 
   <!-- HEADER -->
@@ -700,10 +699,9 @@
   <!-- INPUT SECTION -->
   <div id="inputSection">
     <div class="coin-low-warning" id="coinWarning">
-      ⚠ Moedas insuficientes para analisar.<br>
-      <a onclick="openBuyModal()">Compre mais moedas</a> ou <a onclick="openRedeemModal()">resgate um código</a>.
-    </div>
-
+  ⚠ Moedas insuficientes para analisar.<br>
+  <a onclick="openBuyModal()">Compre mais moedas</a>.
+</div>
     <div class="mode-toggle">
       <div class="mode-card active-standard" id="modeCardStandard" onclick="setMode('standard')">
         <span class="mode-check">✓</span>
@@ -981,8 +979,8 @@
     </div>
 
     <p style="font-size:0.63rem;color:var(--muted);margin-bottom:14px;line-height:1.6;" id="checkoutNote">
-      🔒 Após o pagamento você receberá um código por e-mail. Cole-o em "Resgatar código" para adicionar as moedas.
-    </p>
+  🔒 Após a aprovação do pagamento, as moedas serão creditadas automaticamente na sua conta.
+</p>
     <div class="modal-btn-row">
       <button class="btn-modal-cancel" onclick="closeBuyModal()">Cancelar</button>
       <button class="btn-modal-confirm" id="btnCheckout" onclick="startCheckout()">Ir para o Checkout →</button>
@@ -990,24 +988,7 @@
   </div>
 </div>
 
-<!-- ══ REDEEM MODAL ═══════════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="redeemModal">
-  <div class="modal">
-    <h2>Resgatar <span>Código</span></h2>
-    <p class="modal-sub">Digite o código recebido para adicionar moedas à sua conta.</p>
-    <div class="redeem-input-row">
-      <input type="text" id="redeemInput" placeholder="Ex: CURRIC-XXXX-XXXX" maxlength="20">
-      <button class="btn-modal-confirm" id="btnRedeem" style="flex:0 0 auto;padding:10px 16px;" onclick="redeemCode()">Resgatar</button>
-    </div>
-    <div class="redeem-msg" id="redeemMsg"></div>
-    <p style="font-size:0.63rem;color:var(--muted);line-height:1.6;margin-bottom:18px;">
-      Cada código pode ser utilizado uma única vez por conta.
-    </p>
-    <div class="modal-btn-row">
-      <button class="btn-modal-cancel" onclick="closeRedeemModal()">Fechar</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -2020,174 +2001,8 @@ async function startCheckout() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── REDEEM MODAL — valida o código no Supabase e credita as moedas ────────────
 // ═══════════════════════════════════════════════════════════════════════════════
-function openRedeemModal() {
-  document.getElementById('redeemInput').value = '';
-  document.getElementById('redeemMsg').textContent = '';
-  document.getElementById('redeemMsg').className = 'redeem-msg';
-  document.getElementById('redeemModal').classList.add('show');
-}
-function closeRedeemModal() { document.getElementById('redeemModal').classList.remove('show'); }
 
-async function redeemCode() {
-  const raw = document.getElementById('redeemInput').value.trim().toUpperCase();
-  const msgEl = document.getElementById('redeemMsg');
-  const btn = document.getElementById('btnRedeem');
 
-  if (!raw) {
-    msgEl.textContent = 'Digite um código.';
-    msgEl.className = 'redeem-msg err';
-    return;
-  }
-
-  if (!currentUser) {
-    msgEl.textContent = 'Você precisa estar logado.';
-    msgEl.className = 'redeem-msg err';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Verificando…';
-  msgEl.textContent = 'Verificando código…';
-  msgEl.className = 'redeem-msg';
-
-  try {
-    // 1) verifica se este usuário já usou este código
-    const { data: alreadyUsed, error: usedErr } = await sb
-      .from('redeemed_codes')
-      .select('id')
-      .eq('user_id', currentUser.id)
-      .eq('code', raw)
-      .maybeSingle();
-
-    if (usedErr) {
-      console.error('[redeem] verificar uso:', usedErr);
-      throw new Error('Erro ao verificar histórico de uso.');
-    }
-
-    if (alreadyUsed) {
-      msgEl.textContent = '✕ Você já utilizou este código.';
-      msgEl.className = 'redeem-msg err';
-      return;
-    }
-
-    // 2) busca o código
-    const { data: codeRow, error: codeErr } = await sb
-      .from('redeem_codes')
-      .select('id, coins, uses, max_uses')
-      .eq('code', raw)
-      .maybeSingle();
-
-    if (codeErr) {
-      console.error('[redeem] buscar código:', codeErr);
-      throw new Error('Erro ao validar o código.');
-    }
-
-    if (!codeRow) {
-      msgEl.textContent = '✕ Código inválido ou expirado.';
-      msgEl.className = 'redeem-msg err';
-      return;
-    }
-
-    if (codeRow.max_uses !== null && (codeRow.uses || 0) >= codeRow.max_uses) {
-      msgEl.textContent = '✕ Código esgotado.';
-      msgEl.className = 'redeem-msg err';
-      return;
-    }
-
-    const coinsToGrant = Number(codeRow.coins || 0);
-
-    if (coinsToGrant <= 0) {
-      throw new Error('Código sem moedas associadas.');
-    }
-
-    // 3) registra o resgate
-    const { error: insertRedeemErr } = await sb
-      .from('redeemed_codes')
-      .insert({
-        user_id: currentUser.id,
-        code: raw,
-        coins: coinsToGrant,
-        redeemed_at: new Date().toISOString()
-      });
-
-    if (insertRedeemErr) {
-      if (insertRedeemErr.code === '23505') {
-        msgEl.textContent = '✕ Você já utilizou este código.';
-        msgEl.className = 'redeem-msg err';
-        return;
-      }
-
-      console.error('[redeem] registrar uso:', insertRedeemErr);
-      throw new Error('Erro ao registrar uso do código.');
-    }
-
-    // 4) incrementa uso do código
-    const { error: updateUsesErr } = await sb
-      .from('redeem_codes')
-      .update({ uses: (codeRow.uses || 0) + 1 })
-      .eq('id', codeRow.id);
-
-    if (updateUsesErr) {
-      console.warn('[redeem] incrementar uses:', updateUsesErr);
-    }
-
-    // 5) busca wallet atual
-    const { data: walletRow, error: walletErr } = await sb
-      .from('wallets')
-      .select('coins')
-      .eq('user_id', currentUser.id)
-      .maybeSingle();
-
-    if (walletErr) {
-      console.error('[redeem] buscar wallet:', walletErr);
-      throw new Error('Erro ao localizar carteira do usuário.');
-    }
-
-    let newCoins = coinsToGrant;
-
-    if (!walletRow) {
-      const { error: createWalletErr } = await sb
-        .from('wallets')
-        .insert({
-          user_id: currentUser.id,
-          coins: coinsToGrant
-        });
-
-      if (createWalletErr) {
-        console.error('[redeem] criar wallet:', createWalletErr);
-        throw new Error('Erro ao criar carteira do usuário.');
-      }
-    } else {
-      newCoins = Number(walletRow.coins || 0) + coinsToGrant;
-
-      const { error: updateWalletErr } = await sb
-        .from('wallets')
-        .update({ coins: newCoins })
-        .eq('user_id', currentUser.id);
-
-      if (updateWalletErr) {
-        console.error('[redeem] atualizar wallet:', updateWalletErr);
-        throw new Error('Erro ao adicionar moedas na carteira.');
-      }
-    }
-
-    coins = newCoins;
-    updateCoins();
-
-    msgEl.textContent = `✓ +${coinsToGrant} moedas adicionadas à sua conta!`;
-    msgEl.className = 'redeem-msg ok';
-    showToast(`🎉 +${coinsToGrant} moedas resgatadas!`, 'gold');
-
-    setTimeout(closeRedeemModal, 1800);
-  } catch (err) {
-    console.error('[redeem] erro geral:', err);
-    msgEl.textContent = '⚠ ' + (err?.message || 'Erro ao validar código.');
-    msgEl.className = 'redeem-msg err';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Resgatar';
-  }
-}
 
 
 function openConfirmationScreen() {
