@@ -1975,19 +1975,46 @@ function selectPlan(c, price, priceId) {
   document.getElementById('plan-' + c).classList.add('selected');
 }
 
-function startCheckout() {
-  const url = CHECKOUT_URLS[selectedPlan.priceId];
-  if (!url) { showToast('⚠ Plano inválido.', ''); return; }
-  // Passa o e-mail do usuário para o checkout pré-preencher o campo
-  const params = new URLSearchParams({ email: currentUser?.email || '' });
-  window.open(url + '?' + params.toString(), '_blank');
+async function startCheckout() {
+  const baseUrl = CHECKOUT_URLS[selectedPlan.priceId];
+  if (!baseUrl) {
+    showToast('⚠ Plano inválido.', '');
+    return;
+  }
+
+  if (!currentUser?.id || !currentUser?.email) {
+    showToast('⚠ Faça login antes de comprar.', '');
+    return;
+  }
+
+  try {
+    // cria registro pending local
+    await sb.from('payments').insert({
+      provider: 'checkoutseguro',
+      user_id: currentUser.id,
+      email: currentUser.email,
+      plan_ref: selectedPlan.priceId,
+      coins: selectedPlan.coins,
+      amount_cents: selectedPlan.price,
+      status: 'pending'
+    });
+  } catch (e) {
+    console.warn('[checkout] não conseguiu criar pending local:', e);
+  }
+
+  const params = new URLSearchParams({
+    email: currentUser.email,
+    uid: currentUser.id,
+    ref: selectedPlan.priceId,
+    coins: String(selectedPlan.coins)
+  });
+
+  const separator = baseUrl.includes('?') ? '&' : '?';
+  const finalUrl = baseUrl + separator + params.toString();
+
+  window.open(finalUrl, '_blank');
   closeBuyModal();
-  // Após o pagamento, o usuário receberá o código por e-mail e resgatará abaixo
-  setTimeout(() => {
-    openRedeemModal();
-    document.getElementById('redeemMsg').textContent = '💡 Cole aqui o código recebido por e-mail após o pagamento.';
-    document.getElementById('redeemMsg').className = 'redeem-msg ok';
-  }, 600);
+  showToast('Abra o pagamento e conclua a compra.', 'gold');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
