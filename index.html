@@ -1464,8 +1464,16 @@ function removeGenJobImage() {
 // ── ANALYZE ───────────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 async function analyzeResume() {
+  
   const errorEl = document.getElementById('errorMsg');
   errorEl.classList.remove('show');
+
+  const allowed = await checkAccess();
+if (!allowed) {
+  errorEl.textContent = 'Você não tem acesso ativo.';
+  errorEl.classList.add('show');
+  return;
+}
 
   if (currentMode === 'generator') {
     await runGenerator();
@@ -1635,6 +1643,9 @@ Regras:
     renderResults(result);
 
     await deductCoins(cost);
+    await sb.rpc('increment_usage', {
+  uid: currentUser.id
+});
 
     try {
       const { error: historyError } = await sb.from('analysis_history').insert({
@@ -2041,6 +2052,46 @@ async function handleEmailConfirmationReturn() {
 window.addEventListener('load', () => {
   handleEmailConfirmationReturn();
 });
+
+  async function checkAccess() {
+  if (!currentUser) return false;
+
+  const { data, error } = await sb
+    .from('user_access')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .maybeSingle();
+
+  if (error || !data) return false;
+
+  const now = new Date();
+  const expires = new Date(data.access_expires_at);
+
+  const today = new Date().toISOString().slice(0,10);
+
+  if (data.last_reset_date !== today) {
+    await sb
+      .from('user_access')
+      .update({
+        used_today: 0,
+        last_reset_date: today
+      })
+      .eq('user_id', currentUser.id);
+
+    data.used_today = 0;
+  }
+
+  if (!data.access_active || now > expires) {
+    return false;
+  }
+
+  if (data.used_today >= data.daily_limit) {
+    showToast('Limite diário atingido.', '');
+    return false;
+  }
+
+  return true;
+}
 // ─── Init ─────────────────────────────────────────────────────────────────────
 // onAuthStateChange já dispara automaticamente com a sessão atual ao ser registrado.
 // NÃO chamamos getSession() separado para evitar race condition com o listener.
