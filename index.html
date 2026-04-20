@@ -1480,14 +1480,6 @@ if (!allowed) {
     return;
   }
 
-  let cost = COST_STANDARD;
-  if (currentMode === 'premium') cost = COST_PREMIUM;
-
-  if (coins < cost) {
-    errorEl.textContent = 'Moedas insuficientes para analisar.';
-    errorEl.classList.add('show');
-    return;
-  }
 
   const resumeText = document.getElementById('resumeText').value.trim();
 
@@ -1642,7 +1634,6 @@ Regras:
     document.getElementById('loadingSection').classList.remove('show');
     renderResults(result);
 
-    await deductCoins(cost);
     await sb.rpc('increment_usage', {
   uid: currentUser.id
 });
@@ -1673,14 +1664,16 @@ Regras:
 }
 
 async function runGenerator() {
+  const allowed = await checkAccess();
+if (!allowed) {
+  errorEl.textContent = 'Você não tem acesso ativo.';
+  errorEl.classList.add('show');
+  return;
+}
   const errorEl = document.getElementById('errorMsg');
   errorEl.classList.remove('show');
 
-  if (coins < COST_GENERATOR) {
-    errorEl.textContent = 'Moedas insuficientes para gerar currículo.';
-    errorEl.classList.add('show');
-    return;
-  }
+ 
 
   const jobText = document.getElementById('genJobText').value.trim();
   const hasChoiceYes = document.getElementById('genChoiceYes').classList.contains('active');
@@ -1789,7 +1782,6 @@ Linguagem de impacto, verbos de ação e otimização para ATS.`
     document.getElementById('loadingSection').classList.remove('show');
     renderGeneratedCv(rawText);
 
-    await deductCoins(COST_GENERATOR);
 
     try {
       const { error: historyError } = await sb.from('analysis_history').insert({
