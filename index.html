@@ -1611,7 +1611,12 @@ Regras:
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Erro ao analisar currículo');
+throw new Error(
+  data?.details?.error?.message ||
+  data?.details?.message ||
+  data?.error ||
+  JSON.stringify(data)
+);
     }
 
     const rawText = data.content?.[0]?.text || '';
