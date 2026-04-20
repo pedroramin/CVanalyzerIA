@@ -866,8 +866,8 @@
 
     <button class="btn-analyze standard-btn" id="analyzeBtn" onclick="analyzeResume()">
   ✦ Analisar Currículo
-  <span class="btn-cost-badge" id="btnCostBadge">grátis</span>
-</button>
+<span class="btn-cost-badge" id="btnCostBadge">1 moeda</span>
+    </button>
 
     <div class="error-msg" id="errorMsg"></div>
   </div>
@@ -1369,14 +1369,13 @@ function setMode(mode) {
 
   if (mode === 'premium') {
     btn.className = 'btn-analyze premium-btn';
-    btn.innerHTML = '🎯 Analisar Match com Vaga <span class="btn-cost-badge" id="btnCostBadge">grátis</span>';
+btn.innerHTML = '🎯 Analisar Match com Vaga <span class="btn-cost-badge" id="btnCostBadge">3 moedas</span>';
   } else if (mode === 'generator') {
     btn.className = 'btn-analyze generator-btn';
-    btn.innerHTML = '✨ Gerar Meu Currículo <span class="btn-cost-badge" id="btnCostBadge">grátis</span>';
+btn.innerHTML = '✨ Gerar Meu Currículo <span class="btn-cost-badge" id="btnCostBadge">5 moedas</span>';
   } else {
     btn.className = 'btn-analyze standard-btn';
-    btn.innerHTML = '✦ Analisar Currículo <span class="btn-cost-badge" id="btnCostBadge">grátis</span>';
-  }
+btn.innerHTML = '✦ Analisar Currículo <span class="btn-cost-badge" id="btnCostBadge">1 moeda</span>';  }
 
   updateWarning();
 }
@@ -1484,19 +1483,20 @@ function removeGenJobImage() {
 // ── ANALYZE ───────────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 async function analyzeResume() {
-  const let cost = COST_STANDARD;
-if (currentMode === 'premium') cost = COST_PREMIUM;
-
-if (coins < cost) {
-  errorEl.textContent = 'Moedas insuficientes para analisar.';
-  errorEl.classList.add('show');
-  return;
-}
-  = document.getElementById('errorMsg');
+  const errorEl = document.getElementById('errorMsg');
   errorEl.classList.remove('show');
 
   if (currentMode === 'generator') {
     await runGenerator();
+    return;
+  }
+
+  let cost = COST_STANDARD;
+  if (currentMode === 'premium') cost = COST_PREMIUM;
+
+  if (coins < cost) {
+    errorEl.textContent = 'Moedas insuficientes para analisar.';
+    errorEl.classList.add('show');
     return;
   }
 
@@ -1633,12 +1633,12 @@ Regras:
     const data = await response.json();
 
     if (!response.ok) {
-throw new Error(
-  data?.details?.error?.message ||
-  data?.details?.message ||
-  data?.error ||
-  JSON.stringify(data)
-);
+      throw new Error(
+        data?.details?.error?.message ||
+        data?.details?.message ||
+        data?.error ||
+        JSON.stringify(data)
+      );
     }
 
     const rawText = data.content?.[0]?.text || '';
@@ -1651,40 +1651,44 @@ throw new Error(
     const result = JSON.parse(jsonMatch[0]);
 
     document.getElementById('loadingSection').classList.remove('show');
-   renderResults(result);
+    renderResults(result);
 
-try {
-  const { error: historyError } = await sb.from('analysis_history').insert({
-    user_id: currentUser.id,
-    type: currentMode,
-    score: result.score || 0
-  });
+    await deductCoins(cost);
 
-  if (historyError) {
-    console.error('Erro ao salvar histórico:', historyError);
-    showToast('Histórico não foi salvo', '');
-  } else {
-    console.log('Histórico salvo com sucesso');
-  }
-} catch (e) {
-  console.error('Erro ao salvar histórico:', e);
-  showToast('Histórico não foi salvo', '');
-}
+    try {
+      const { error: historyError } = await sb.from('analysis_history').insert({
+        user_id: currentUser.id,
+        type: currentMode,
+        score: result.score || 0
+      });
+
+      if (historyError) {
+        console.error('Erro ao salvar histórico:', historyError);
+        showToast('Histórico não foi salvo', '');
+      } else {
+        console.log('Histórico salvo com sucesso');
+      }
+    } catch (e) {
+      console.error('Erro ao salvar histórico:', e);
+      showToast('Histórico não foi salvo', '');
+    }
   } catch (err) {
     document.getElementById('loadingSection').classList.remove('show');
     document.getElementById('inputSection').style.display = 'block';
-errorEl.textContent = '⚠ Erro ao analisar: ' + (err?.message || JSON.stringify(err));    errorEl.classList.add('show');
+    errorEl.textContent = '⚠ Erro ao analisar: ' + (err?.message || JSON.stringify(err));
+    errorEl.classList.add('show');
   }
 }
 
 async function runGenerator() {
-  if (coins < COST_GENERATOR) {
-  errorEl.textContent = 'Moedas insuficientes para gerar currículo.';
-  errorEl.classList.add('show');
-  return;
-}
   const errorEl = document.getElementById('errorMsg');
   errorEl.classList.remove('show');
+
+  if (coins < COST_GENERATOR) {
+    errorEl.textContent = 'Moedas insuficientes para gerar currículo.';
+    errorEl.classList.add('show');
+    return;
+  }
 
   const jobText = document.getElementById('genJobText').value.trim();
   const hasChoiceYes = document.getElementById('genChoiceYes').classList.contains('active');
@@ -1780,42 +1784,43 @@ Linguagem de impacto, verbos de ação e otimização para ATS.`
     const data = await response.json();
 
     if (!response.ok) {
-throw new Error(
-  data?.details?.error?.message ||
-  data?.details?.message ||
-  data?.error ||
-  JSON.stringify(data)
-);
+      throw new Error(
+        data?.details?.error?.message ||
+        data?.details?.message ||
+        data?.error ||
+        JSON.stringify(data)
+      );
     }
 
     const rawText = data.content?.[0]?.text || '';
 
     document.getElementById('loadingSection').classList.remove('show');
     renderGeneratedCv(rawText);
-    await deductCoins(COST_GENERATOR);
-    try {
-  const { error: historyError } = await sb.from('analysis_history').insert({
-    user_id: currentUser.id,
-    type: 'generator',
-    score: 0
-  });
 
-  if (historyError) {
-    console.error('Erro ao salvar histórico do gerador:', historyError);
-  } else {
-    console.log('Histórico do gerador salvo com sucesso');
-  }
-} catch (e) {
-  console.error('Erro ao salvar histórico do gerador:', e);
-}
+    await deductCoins(COST_GENERATOR);
+
+    try {
+      const { error: historyError } = await sb.from('analysis_history').insert({
+        user_id: currentUser.id,
+        type: 'generator',
+        score: 0
+      });
+
+      if (historyError) {
+        console.error('Erro ao salvar histórico do gerador:', historyError);
+      } else {
+        console.log('Histórico do gerador salvo com sucesso');
+      }
+    } catch (e) {
+      console.error('Erro ao salvar histórico do gerador:', e);
+    }
   } catch (err) {
     document.getElementById('loadingSection').classList.remove('show');
     document.getElementById('inputSection').style.display = 'block';
-errorEl.textContent = '⚠ Erro ao gerar currículo: ' + (err?.message || JSON.stringify(err));
+    errorEl.textContent = '⚠ Erro ao gerar currículo: ' + (err?.message || JSON.stringify(err));
     errorEl.classList.add('show');
   }
 }
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── RENDER RESULTS ────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -2106,9 +2111,9 @@ async function redeemCode() {
       coinsOk = true;
       // Recarrega saldo real do banco após RPC
       const { data: updated, error: fetchErr } = await sb
-        .from('users')
-        .select('coins')
-        .eq('id', currentUser.id)
+        .from('wallets')
+.select('coins')
+.eq('user_id', currentUser.id)
         .single();
       if (!fetchErr && updated) {
         coins = updated.coins;
@@ -2133,9 +2138,9 @@ async function redeemCode() {
 
       const newCoins = (currentProfile.coins || 0) + coinsToGrant;
       const { error: updateCoinsErr } = await sb
-        .from('users')
-        .update({ coins: newCoins })
-        .eq('id', currentUser.id);
+        .from('wallets')
+.update({ coins: newCoins })
+.eq('user_id', currentUser.id)
 
       if (updateCoinsErr) {
         console.error('[redeem] Etapa 6 fallback (update coins):', updateCoinsErr.message);
