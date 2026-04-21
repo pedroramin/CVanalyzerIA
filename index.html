@@ -684,6 +684,7 @@
     <span class="coin-count" id="coinCount">Acesso ativo</span>
   </div>
 </div>
+    </div>
 
   <!-- HEADER -->
   <div class="header">
@@ -937,43 +938,6 @@
     </button>
   </div>
 </div>
-
-<!-- ══ BUY MODAL ══════════════════════════════════════════════════════════════ -->
-
-      <div class="plan-card selected" id="plan-20" onclick="selectPlan(20, 2990, 'cs_20moedas')">
-        <span class="plan-badge">Mais Popular</span>
-        <span class="plan-coins">20</span>
-        <span class="plan-coin-label">moedas</span>
-        <span class="plan-price">R$ 29,90</span>
-        <span class="plan-price-label">R$ 1,50 / moeda</span>
-        <div class="plan-saving">economia 42%</div>
-      </div>
-      <div class="plan-card" id="plan-50" onclick="selectPlan(50, 5990, 'cs_50moedas')">
-        <span class="plan-badge" style="background:var(--accent);color:#000">Melhor Valor</span>
-        <span class="plan-coins">50</span>
-        <span class="plan-coin-label">moedas</span>
-        <span class="plan-price">R$ 59,90</span>
-        <span class="plan-price-label">R$ 1,20 / moeda</span>
-        <div class="plan-saving">economia 53%</div>
-      </div>
-    </div>
-
-    <!-- Checkout loading state -->
-    <div class="checkout-loading" id="checkoutLoading">
-      <div class="spinner"></div>
-      <p>Redirecionando para o pagamento…</p>
-    </div>
-
-    <p style="font-size:0.63rem;color:var(--muted);margin-bottom:14px;line-height:1.6;" id="checkoutNote">
-  🔒 Após a aprovação do pagamento, as moedas serão creditadas automaticamente na sua conta.
-</p>
-    <div class="modal-btn-row">
-      <button class="btn-modal-cancel" onclick="closeBuyModal()">Cancelar</button>
-      <button class="btn-modal-confirm" id="btnCheckout" onclick="startCheckout()">Ir para o Checkout →</button>
-    </div>
-  </div>
-</div>
-
 
 
 <!-- TOAST -->
@@ -1885,7 +1849,32 @@ async function handleEmailConfirmationReturn() {
 window.addEventListener('load', () => {
   handleEmailConfirmationReturn();
 });
+async function updateWarning() {
+  const w = document.getElementById('coinWarning');
+  const btn = document.getElementById('analyzeBtn');
 
+  if (!currentUser) {
+    if (w) {
+      w.innerHTML = '⚠ Faça login para usar.';
+      w.classList.add('show');
+    }
+    if (btn) btn.disabled = true;
+    return;
+  }
+
+  const allowed = await checkAccess();
+
+  if (!allowed) {
+    if (w) {
+      w.innerHTML = '⚠ Seu acesso não está ativo ou seu limite diário foi atingido.';
+      w.classList.add('show');
+    }
+    if (btn) btn.disabled = true;
+  } else {
+    if (w) w.classList.remove('show');
+    if (btn) btn.disabled = false;
+  }
+}
   async function checkAccess() {
   if (!currentUser) return false;
 
