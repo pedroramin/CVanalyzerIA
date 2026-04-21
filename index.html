@@ -939,17 +939,7 @@
 </div>
 
 <!-- ══ BUY MODAL ══════════════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="buyModal">
-  <div class="modal">
-    <h2>Comprar <span>Moedas</span></h2>
-    <p class="modal-sub">Escolha o pacote ideal. Moedas não expiram e ficam salvas na sua conta.</p>
-    <div class="plan-grid">
-      <div class="plan-card" id="plan-5" onclick="selectPlan(5, 1290, 'cs_5moedas')">
-        <span class="plan-coins">5</span>
-        <span class="plan-coin-label">moedas</span>
-        <span class="plan-price">R$ 12,90</span>
-        <span class="plan-price-label">R$ 2,58 / moeda</span>
-      </div>
+
       <div class="plan-card selected" id="plan-20" onclick="selectPlan(20, 2990, 'cs_20moedas')">
         <span class="plan-badge">Mais Popular</span>
         <span class="plan-coins">20</span>
@@ -1020,7 +1010,6 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 // ── STATE ─────────────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 let currentUser   = null;
-let coins         = 0;
 let uploadedFile  = null;
 let uploadedJob   = null;
 let currentMode   = 'standard';
@@ -1202,116 +1191,9 @@ sb.auth.onAuthStateChange(async (event, session) => {
 });
 
 async function loadUserProfile() {
-  if (!currentUser) return;
-
-  const { data: existing, error: fetchErr } = await sb
-    .from('wallets')
-    .select('coins')
-    .eq('user_id', currentUser.id)
-    .maybeSingle();
-
-  if (fetchErr) {
-    console.warn('[wallet] SELECT falhou:', fetchErr.message);
-    coins = 0;
-    return;
-  }
-
-  if (existing) {
-    coins = existing.coins ?? 0;
-    return;
-  }
-
-  const { data: inserted, error: insertErr } = await sb
-    .from('wallets')
-    .insert({ user_id: currentUser.id, coins: 0 })
-    .select('coins')
-    .single();
-
-  if (!insertErr) {
-    coins = inserted?.coins ?? 0;
-    return;
-  }
-
-  console.warn('[wallet] INSERT falhou:', insertErr.message, '| code:', insertErr.code);
-
-  const { data: retry } = await sb
-    .from('wallets')
-    .select('coins')
-    .eq('user_id', currentUser.id)
-    .maybeSingle();
-
-  coins = retry?.coins ?? 0;
+  return;
 }
-
-function showApp() {
-  document.getElementById('authWall').classList.add('hidden');
-  document.getElementById('appContent').classList.add('visible');
-  // Exibe info do usuário
-  const name  = currentUser.user_metadata?.full_name || currentUser.email;
-  const email = currentUser.email;
-  document.getElementById('userEmail').textContent = email;
-  document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
-updateWarning();
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// ── COINS ─────────────────────────────────────────────────────────────────────
-// ═══════════════════════════════════════════════════════════════════════════════
-function updateCoins() {
-  document.getElementById('coinCount').innerHTML = coins + ' <span>moedas</span>';
-  updateWarning();
-}
-
-async function saveCoins(newCoins) {
-  coins = newCoins;
-  updateCoins();
-  if (!currentUser) return;
-
-  const { error } = await sb
-    .from('wallets')
-    .update({ coins })
-    .eq('user_id', currentUser.id);
-
-  if (error) {
-    console.error('[wallet] erro ao salvar coins:', error);
-  }
-}
-async function deductCoins(amount) {
-  const newCoins = coins - amount;
-  await saveCoins(newCoins);
-}
-
-async function grantCoins(amount) {
-  const newCoins = coins + amount;
-  await saveCoins(newCoins);
-}
-
-async function updateWarning() {
-  const w = document.getElementById('coinWarning');
-  const btn = document.getElementById('analyzeBtn');
-
-  if (!currentUser) {
-    if (w) {
-      w.innerHTML = '⚠ Faça login para usar.';
-      w.classList.add('show');
-    }
-    if (btn) btn.disabled = true;
-    return;
-  }
-
-  const allowed = await checkAccess();
-
-  if (!allowed) {
-    if (w) {
-      w.innerHTML = '⚠ Seu acesso não está ativo ou seu limite diário foi atingido.';
-      w.classList.add('show');
-    }
-    if (btn) btn.disabled = true;
-  } else {
-    if (w) w.classList.remove('show');
-    if (btn) btn.disabled = false;
-  }
-}
+  
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── TOAST ─────────────────────────────────────────────────────────────────────
@@ -1959,56 +1841,6 @@ const CHECKOUT_URLS = {
   'cs_50moedas': 'https://checkoutseguro.ru/checkout/cmo1nz9kd000j1qo6ycmchd3v?offer=2W00KCF',
 };
 
-function openBuyModal()  { document.getElementById('buyModal').classList.add('show'); }
-function closeBuyModal() { document.getElementById('buyModal').classList.remove('show'); }
-
-function selectPlan(c, price, priceId) {
-  selectedPlan = { coins: c, price, priceId };
-  document.querySelectorAll('.plan-card').forEach(el => el.classList.remove('selected'));
-  document.getElementById('plan-' + c).classList.add('selected');
-}
-
-async function startCheckout() {
-  const baseUrl = CHECKOUT_URLS[selectedPlan.priceId];
-  if (!baseUrl) {
-    showToast('⚠ Plano inválido.', '');
-    return;
-  }
-
-  if (!currentUser?.id || !currentUser?.email) {
-    showToast('⚠ Faça login antes de comprar.', '');
-    return;
-  }
-
-  try {
-    // cria registro pending local
-    await sb.from('payments').insert({
-      provider: 'checkoutseguro',
-      user_id: currentUser.id,
-      email: currentUser.email,
-      plan_ref: selectedPlan.priceId,
-      coins: selectedPlan.coins,
-      amount_cents: selectedPlan.price,
-      status: 'pending'
-    });
-  } catch (e) {
-    console.warn('[checkout] não conseguiu criar pending local:', e);
-  }
-
-  const params = new URLSearchParams({
-    email: currentUser.email,
-    uid: currentUser.id,
-    ref: selectedPlan.priceId,
-    coins: String(selectedPlan.coins)
-  });
-
-  const separator = baseUrl.includes('?') ? '&' : '?';
-  const finalUrl = baseUrl + separator + params.toString();
-
-  window.open(finalUrl, '_blank');
-  closeBuyModal();
-showToast('Conclua o pagamento. As moedas entrarão automaticamente após a aprovação.', 'gold');
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── REDEEM MODAL — valida o código no Supabase e credita as moedas ────────────
