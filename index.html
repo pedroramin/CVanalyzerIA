@@ -1202,14 +1202,14 @@ function setMode(mode) {
 
   if (mode === 'premium') {
     btn.className = 'btn-analyze premium-btn';
-btn.innerHTML = '🎯 Analisar Match com Vaga <span class="btn-cost-badge" id="btnCostBadge">3 moedas</span>';
+btn.innerHTML = '🎯 Analisar Match com Vaga';
   } else if (mode === 'generator') {
     btn.className = 'btn-analyze generator-btn';
-btn.innerHTML = '✨ Gerar Meu Currículo <span class="btn-cost-badge" id="btnCostBadge">5 moedas</span>';
+btn.innerHTML = '✨ Gerar Meu Currículo';
   } else {
     btn.className = 'btn-analyze standard-btn';
-btn.innerHTML = '✦ Analisar Currículo <span class="btn-cost-badge" id="btnCostBadge">1 moeda</span>';  }
-
+btn.innerHTML = '✦ Analisar Currículo';
+    
   updateWarning();
 }
 // ═══════════════════════════════════════════════════════════════════════════════
