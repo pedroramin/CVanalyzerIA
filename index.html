@@ -677,17 +677,13 @@
 
   <!-- COIN BAR -->
   <div class="coin-bar">
-    <div class="coin-left">
-      <span class="coin-icon">🪙</span>
-      <div class="coin-info">
-        <span class="coin-label">Saldo</span>
-        <span class="coin-count" id="coinCount">0 <span>moedas</span></span>
-      </div>
-    </div>
-   <div class="coin-actions">
-  <button class="btn-buy" onclick="openBuyModal()">+ Comprar moedas</button>
-</div>
+   <div class="coin-left">
+  <span class="coin-icon">✅</span>
+  <div class="coin-info">
+    <span class="coin-label">Plano</span>
+    <span class="coin-count" id="coinCount">Acesso ativo</span>
   </div>
+</div>
 
   <!-- HEADER -->
   <div class="header">
@@ -699,8 +695,8 @@
   <!-- INPUT SECTION -->
   <div id="inputSection">
     <div class="coin-low-warning" id="coinWarning">
-  ⚠ Moedas insuficientes para analisar.<br>
-  <a onclick="openBuyModal()">Compre mais moedas</a>.
+  ⚠ Seu acesso não está ativo.<br>
+  Entre em contato para liberar sua assinatura.
 </div>
     <div class="mode-toggle">
       <div class="mode-card active-standard" id="modeCardStandard" onclick="setMode('standard')">
@@ -1255,7 +1251,7 @@ function showApp() {
   const email = currentUser.email;
   document.getElementById('userEmail').textContent = email;
   document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
-  updateCoins();
+updateWarning();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1290,16 +1286,26 @@ async function grantCoins(amount) {
   await saveCoins(newCoins);
 }
 
-function updateWarning() {
+async function updateWarning() {
   const w = document.getElementById('coinWarning');
   const btn = document.getElementById('analyzeBtn');
 
-  let cost = COST_STANDARD;
-  if (currentMode === 'premium') cost = COST_PREMIUM;
-  if (currentMode === 'generator') cost = COST_GENERATOR;
+  if (!currentUser) {
+    if (w) {
+      w.innerHTML = '⚠ Faça login para usar.';
+      w.classList.add('show');
+    }
+    if (btn) btn.disabled = true;
+    return;
+  }
 
-  if (coins < cost) {
-    if (w) w.classList.add('show');
+  const allowed = await checkAccess();
+
+  if (!allowed) {
+    if (w) {
+      w.innerHTML = '⚠ Seu acesso não está ativo ou seu limite diário foi atingido.';
+      w.classList.add('show');
+    }
     if (btn) btn.disabled = true;
   } else {
     if (w) w.classList.remove('show');
