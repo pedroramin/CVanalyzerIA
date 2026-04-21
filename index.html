@@ -1664,15 +1664,15 @@ Regras:
 }
 
 async function runGenerator() {
-  const allowed = await checkAccess();
-if (!allowed) {
-  errorEl.textContent = 'Você não tem acesso ativo.';
-  errorEl.classList.add('show');
-  return;
-}
   const errorEl = document.getElementById('errorMsg');
   errorEl.classList.remove('show');
 
+  const allowed = await checkAccess();
+  if (!allowed) {
+    errorEl.textContent = 'Você não tem acesso ativo.';
+    errorEl.classList.add('show');
+    return;
+  }
  
 
   const jobText = document.getElementById('genJobText').value.trim();
@@ -1781,6 +1781,9 @@ Linguagem de impacto, verbos de ação e otimização para ATS.`
 
     document.getElementById('loadingSection').classList.remove('show');
     renderGeneratedCv(rawText);
+    await sb.rpc('increment_usage', {
+  uid: currentUser.id
+});
 
 
     try {
