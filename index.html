@@ -861,7 +861,6 @@
 
     <button class="btn-analyze standard-btn" id="analyzeBtn" onclick="analyzeResume()">
   ✦ Analisar Currículo
-<span class="btn-cost-badge" id="btnCostBadge">1 moeda</span>
     </button>
 
     <div class="error-msg" id="errorMsg"></div>
@@ -1110,36 +1109,35 @@ function traduzirErroAuth(msg) {
 // A solução correta é desabilitar "Email Confirmations" no painel Supabase:
 // Authentication → Providers → Email → desmarcar "Enable email confirmations".
 sb.auth.onAuthStateChange(async (event, session) => {
-
-  // Limpa parâmetros de auth da URL (ex: #access_token=...) sem recarregar a página
   if (window.location.hash.includes('access_token')) {
     window.history.replaceState({}, '', window.location.pathname);
   }
 
   console.log('[auth] evento:', event, '| user:', session?.user?.email ?? 'null');
 
- if (session?.user) {
-  currentUser = session.user;
+  if (session?.user) {
+    currentUser = session.user;
 
-  const profileTimeout = setTimeout(() => {
-    console.warn('[auth] loadUserProfile timeout');
+    const profileTimeout = setTimeout(() => {
+      console.warn('[auth] loadUserProfile timeout');
+      showApp();
+    }, 8000);
+
+    try {
+      await loadUserProfile();
+    } catch (e) {
+      console.warn('[auth] loadUserProfile erro:', e.message);
+    } finally {
+      clearTimeout(profileTimeout);
+    }
+
     showApp();
-  }, 8000);
-
-  try {
-    await loadUserProfile();
-  } catch (e) {
-    console.warn('[auth] loadUserProfile erro:', e.message);
-  } finally {
-    clearTimeout(profileTimeout);
+  } else {
+    currentUser = null;
+    document.getElementById('appContent').classList.remove('visible');
+    document.getElementById('authWall').classList.remove('hidden');
   }
-
-  showApp();
-} else {
-  currentUser = null;
-  document.getElementById('appContent').classList.remove('visible');
-  document.getElementById('authWall').classList.remove('hidden');
-}
+});
 
 async function loadUserProfile() {
   return;
