@@ -658,7 +658,7 @@
 
     <div class="auth-footer">
       🔒 Seus dados são protegidos e nunca compartilhados.<br>
-      Crie sua conta e compre moedas para começar a analisar.
+      Crie sua conta e ative sua assinatura para começar a analisar.
     </div>
   </div>
 </div>
@@ -708,7 +708,7 @@
           <span class="mode-badge badge-standard">Padrão</span>
         </div>
         <p class="mode-desc">Análise completa do seu currículo com pontos de melhoria, estrutura, impacto e competências.</p>
-        <span class="mode-cost standard">1 moeda por análise</span>
+        <span class="mode-cost standard">Acesso incluso</span>
       </div>
       <div class="mode-card" id="modeCardPremium" onclick="setMode('premium')">
         <span class="mode-check">✓</span>
@@ -718,7 +718,7 @@
           <span class="mode-badge badge-premium">Premium</span>
         </div>
         <p class="mode-desc">Envie o print da vaga desejada. A IA cruza seu currículo com os requisitos e mostra seu % de compatibilidade.</p>
-        <span class="mode-cost premium">3 moedas por análise</span>
+        <span class="mode-cost premium">Acesso incluso</span>
       </div>
       <div class="mode-card" id="modeCardGenerator" onclick="setMode('generator')">
         <span class="mode-check">✓</span>
@@ -728,7 +728,7 @@
           <span class="mode-badge badge-generator">Elite</span>
         </div>
         <p class="mode-desc">A IA cria um currículo profissional do zero. Envie uma vaga, um currículo antigo ou responda perguntas guiadas.</p>
-        <span class="mode-cost generator">5 moedas por geração</span>
+        <span class="mode-cost generator">Acesso incluso</span>
       </div>
     </div>
 
@@ -958,10 +958,6 @@ const API_ENDPOINT    = '/api/analyze';                           // seu proxy A
 const SITE_URL = 'https://c-vanalyzer-ia.vercel.app';
 // Moedas são creditadas via código de resgate enviado por e-mail após o pagamento
 
-const COST_STANDARD  = 1;
-const COST_PREMIUM   = 3;
-const COST_GENERATOR = 5;
-
 // Códigos de resgate são validados no Supabase (tabela redeem_codes) — não ficam expostos no front-end
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -977,8 +973,6 @@ let currentUser   = null;
 let uploadedFile  = null;
 let uploadedJob   = null;
 let currentMode   = 'standard';
-let selectedPlan  = { coins: 20, price: 2990, priceId: 'cs_20moedas' };
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── AUTH ──────────────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1010,7 +1004,7 @@ async function handleLogin() {
   // Fallback manual caso o evento demore (ex: rede lenta):
   if (data?.session?.user) {
     currentUser = data.session.user;
-    try { await loadUserProfile(); } catch(e) { coins = 0; }
+try { await loadUserProfile(); } catch(e) {}
     showApp();
   }
 }
@@ -1088,12 +1082,10 @@ async function handleGoogleLogin() {
 async function handleLogout() {
   await sb.auth.signOut();
   currentUser = null;
-  coins = 0;
   uploadedFile = null;
-  uploadedJob  = null;
+  uploadedJob = null;
   document.getElementById('appContent').classList.remove('visible');
   document.getElementById('authWall').classList.remove('hidden');
-  // Limpa campos para evitar dados do usuário anterior ficarem visíveis
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPassword').value = '';
   document.getElementById('loginError').classList.remove('show');
@@ -1126,33 +1118,28 @@ sb.auth.onAuthStateChange(async (event, session) => {
 
   console.log('[auth] evento:', event, '| user:', session?.user?.email ?? 'null');
 
-  if (session?.user) {
-    currentUser = session.user;
+ if (session?.user) {
+  currentUser = session.user;
 
-    // Timeout de segurança: se loadUserProfile demorar mais de 8s, mostra o app mesmo assim
-    const profileTimeout = setTimeout(() => {
-      console.warn('[auth] loadUserProfile timeout — abrindo app com coins=0');
-      coins = 0;
-      showApp();
-    }, 8000);
-
-    try {
-      await loadUserProfile();
-    } catch (e) {
-      console.warn('[auth] loadUserProfile erro:', e.message);
-      coins = 0;
-    } finally {
-      clearTimeout(profileTimeout);
-    }
-
+  const profileTimeout = setTimeout(() => {
+    console.warn('[auth] loadUserProfile timeout');
     showApp();
-  } else {
-    currentUser = null;
-    coins = 0;
-    document.getElementById('appContent').classList.remove('visible');
-    document.getElementById('authWall').classList.remove('hidden');
+  }, 8000);
+
+  try {
+    await loadUserProfile();
+  } catch (e) {
+    console.warn('[auth] loadUserProfile erro:', e.message);
+  } finally {
+    clearTimeout(profileTimeout);
   }
-});
+
+  showApp();
+} else {
+  currentUser = null;
+  document.getElementById('appContent').classList.remove('visible');
+  document.getElementById('authWall').classList.remove('hidden');
+}
 
 async function loadUserProfile() {
   return;
@@ -1202,14 +1189,15 @@ function setMode(mode) {
 
   if (mode === 'premium') {
     btn.className = 'btn-analyze premium-btn';
-btn.innerHTML = '🎯 Analisar Match com Vaga';
+    btn.innerHTML = '🎯 Analisar Match com Vaga';
   } else if (mode === 'generator') {
     btn.className = 'btn-analyze generator-btn';
-btn.innerHTML = '✨ Gerar Meu Currículo';
+    btn.innerHTML = '✨ Gerar Meu Currículo';
   } else {
     btn.className = 'btn-analyze standard-btn';
-btn.innerHTML = '✦ Analisar Currículo';
-    
+    btn.innerHTML = '✦ Analisar Currículo';
+  }
+
   updateWarning();
 }
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1799,11 +1787,7 @@ function resetForm() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // URLs de checkout — links reais do CheckoutSeguro
-const CHECKOUT_URLS = {
-  'cs_5moedas':  'https://checkoutseguro.ru/checkout/cmo1nz9kd000j1qo6ycmchd3v?offer=R9JX4Q5',
-  'cs_20moedas': 'https://checkoutseguro.ru/checkout/cmo1nz9kd000j1qo6ycmchd3v?offer=1ITEGTR',
-  'cs_50moedas': 'https://checkoutseguro.ru/checkout/cmo1nz9kd000j1qo6ycmchd3v?offer=2W00KCF',
-};
+
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1841,7 +1825,6 @@ async function handleEmailConfirmationReturn() {
   await sb.auth.signOut();
 
   currentUser = null;
-  coins = 0;
 
   openConfirmationScreen();
 }
