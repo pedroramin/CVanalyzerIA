@@ -1142,6 +1142,19 @@ sb.auth.onAuthStateChange(async (event, session) => {
 async function loadUserProfile() {
   return;
 }
+
+function showApp() {
+  document.getElementById('authWall').classList.add('hidden');
+  document.getElementById('appContent').classList.add('visible');
+
+  const name = currentUser?.user_metadata?.full_name || currentUser?.email || 'U';
+  const email = currentUser?.email || '—';
+
+  document.getElementById('userEmail').textContent = email;
+  document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+
+  updateWarning();
+}
   
 
 // ═══════════════════════════════════════════════════════════════════════════════
