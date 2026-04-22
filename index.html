@@ -681,7 +681,7 @@
   <span class="coin-icon">✅</span>
   <div class="coin-info">
     <span class="coin-label">Plano</span>
-    <span class="coin-count" id="coinCount">Acesso ativo</span>
+    <span class="coin-count" id="coinCount">Verificando...</span>
   </div>
 </div>
     </div>
@@ -2000,28 +2000,88 @@ window.addEventListener('load', () => {
 async function updateWarning() {
   const w = document.getElementById('coinWarning');
   const btn = document.getElementById('analyzeBtn');
+  const planEl = document.getElementById('coinCount');
 
   if (!currentUser) {
+    if (planEl) planEl.textContent = 'Sem login';
+
     if (w) {
       w.innerHTML = '⚠ Faça login para usar.';
       w.classList.add('show');
     }
+
     if (btn) btn.disabled = true;
     return;
   }
 
-  const allowed = await checkAccess();
+  const { data, error } = await sb
+    .from('user_access')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .maybeSingle();
 
-  if (!allowed) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (error || !data) {
+    if (planEl) planEl.textContent = 'Sem acesso';
+
     if (w) {
       w.innerHTML = '⚠ Seu acesso não está ativo ou seu limite diário foi atingido.';
       w.classList.add('show');
     }
+
     if (btn) btn.disabled = true;
-  } else {
-    if (w) w.classList.remove('show');
-    if (btn) btn.disabled = false;
+    return;
   }
+
+  if (data.last_reset_date !== today) {
+    await sb
+      .from('user_access')
+      .update({
+        used_today: 0,
+        last_reset_date: today
+      })
+      .eq('user_id', currentUser.id);
+
+    data.used_today = 0;
+  }
+
+  const now = new Date();
+  const expires = data.access_expires_at ? new Date(data.access_expires_at) : null;
+  const expired = expires && now > expires;
+  const limitReached = data.used_today >= data.daily_limit;
+  const active = data.access_active && !expired;
+
+  if (!active) {
+    if (planEl) planEl.textContent = 'Inativo';
+
+    if (w) {
+      w.innerHTML = '⚠ Seu acesso não está ativo.';
+      w.classList.add('show');
+    }
+
+    if (btn) btn.disabled = true;
+    return;
+  }
+
+  if (limitReached) {
+    if (planEl) planEl.textContent = 'Ativo';
+
+    if (w) {
+      w.innerHTML = '⚠ Seu limite diário foi atingido.';
+      w.classList.add('show');
+    }
+
+    if (btn) btn.disabled = true;
+    return;
+  }
+
+  if (planEl) {
+    planEl.textContent = `Ativo · ${data.daily_limit - data.used_today} usos restantes`;
+  }
+
+  if (w) w.classList.remove('show');
+  if (btn) btn.disabled = false;
 }
   async function checkAccess() {
   if (!currentUser) return false;
