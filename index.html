@@ -1871,7 +1871,10 @@ function switchCvChoice(choice) {
 }
 
 function resetForm() {
-  removeFile(); removeJobImage(); removeGenJobImage();
+  removeFile();
+  removeJobImage();
+  removeGenJobImage();
+  removeGenResumeFile();
   document.getElementById('resumeText').value = '';
   document.getElementById('jobDescText').value = '';
   document.getElementById('genJobText').value = '';
