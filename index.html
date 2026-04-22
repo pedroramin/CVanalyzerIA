@@ -712,7 +712,95 @@
     .modal-btn-row { flex-direction: column; }
     .cv-result-wrap { padding: 24px 20px; }
   }
+
+  .hero-proof {
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(200,240,96,0.04) 0%, rgba(20,20,20,0.9) 100%);
+    border-radius: 4px;
+    padding: 24px 22px;
+    margin-bottom: 22px;
+    text-align: center;
+  }
+
+  .hero-proof-badge {
+    display: inline-block;
+    font-size: 0.58rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(200,240,96,0.10);
+    border: 1px solid rgba(200,240,96,0.22);
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+
+  .hero-proof-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+
+  .hero-proof-text {
+    max-width: 640px;
+    margin: 0 auto 18px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    line-height: 1.8;
+  }
+
+  .hero-proof-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .hero-proof-stat {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 3px;
+    padding: 14px 10px;
+  }
+
+  .hero-proof-stat strong {
+    display: block;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .hero-proof-stat span {
+    display: block;
+    font-size: 0.64rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    line-height: 1.5;
+  }
+
+  .hero-proof-mini {
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    line-height: 1.7;
+  }
+
+  @media (max-width: 600px) {
+    .hero-proof-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-proof {
+      padding: 20px 16px;
+    }
+  }
 </style>
+  
 </head>
 <body>
 
@@ -825,6 +913,38 @@
     <p>Análise profissional de currículo com inteligência artificial</p>
   </div>
 
+  <div class="hero-proof">
+  <div class="hero-proof-badge">Análise inteligente de currículo</div>
+
+  <h2 class="hero-proof-title">
+    Descubra por que seu currículo pode estar sendo ignorado
+  </h2>
+
+  <p class="hero-proof-text">
+    A maioria dos currículos é filtrada antes mesmo de chegar no recrutador.
+    Veja em minutos os erros, pontos fracos e oportunidades de melhoria no seu currículo.
+  </p>
+
+  <div class="hero-proof-stats">
+    <div class="hero-proof-stat">
+      <strong>+1.000</strong>
+      <span>análises realizadas</span>
+    </div>
+    <div class="hero-proof-stat">
+      <strong>Prévia grátis</strong>
+      <span>antes do login</span>
+    </div>
+    <div class="hero-proof-stat">
+      <strong>Match por vaga</strong>
+      <span>com análise direcionada</span>
+    </div>
+  </div>
+
+  <div class="hero-proof-mini">
+    Ideal para quem quer entender o que está impedindo o currículo de chamar atenção.
+  </div>
+</div>
+  
   <!-- INPUT SECTION -->
   <div id="inputSection">
    <div class="coin-low-warning" id="coinWarning">
