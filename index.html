@@ -1458,11 +1458,18 @@ if (!allowed) {
 
   if (currentMode === 'standard') {
     prompt = `
-Você é um recrutador sênior especialista em análise de currículos para vagas ${level} na área de ${area}.
+Você é um recrutador sênior com mais de 10 anos de experiência em seleção para vagas de ${level} na área de ${area}.
 
-Analise o currículo abaixo de forma crítica, profissional e construtiva.
+Analise o currículo fornecido de forma crítica, objetiva e profissional.
 
 ${resumeText ? `Currículo:\n${resumeText}` : '[Currículo enviado como PDF acima]'}
+
+Avalie os seguintes aspectos:
+- Clareza e organização
+- Qualidade das experiências descritas
+- Uso de palavras-chave relevantes para a área
+- Nível de competitividade no mercado
+- Diferenciação em relação a outros candidatos
 
 Responda OBRIGATORIAMENTE em JSON neste formato:
 {
@@ -1472,34 +1479,45 @@ Responda OBRIGATORIAMENTE em JSON neste formato:
       "icon": "📌",
       "title": "Título da análise",
       "tag": "ok",
-      "content": "<ul><li>Ponto 1</li><li>Ponto 2</li></ul>"
+      "content": "<p><strong>Resumo:</strong> breve justificativa.</p><ul><li>Ponto 1</li><li>Ponto 2</li></ul>"
     }
   ],
   "upsell": true
 }
 
-Regras:
-- score deve ser um número de 0 a 100
-- crie no mínimo 5 seções
+Regras obrigatórias:
+- "score" de 0 a 100 representando a nota geral do currículo
+- Crie EXATAMENTE 5 seções com os títulos e ícones abaixo, nessa ordem:
+  1. icon "🏅"  title "Nota Geral"         tag baseada no score (>=70=ok, 50-69=warn, <50=critical) — explique brevemente o motivo da nota
+  2. icon "💪"  title "Pontos Fortes"       tag "ok"       — liste de 3 a 5 pontos positivos reais do currículo
+  3. icon "⚠️"  title "Pontos Fracos"       tag "warn"     — liste falhas que podem prejudicar a contratação
+  4. icon "🛠️"  title "Melhorias Práticas"  tag "warn"     — sugira melhorias específicas e aplicáveis
+  5. icon "✍️"  title "Exemplo Melhorado"   tag "ok"       — reescreva um trecho real do currículo de forma mais profissional
 - "tag" deve ser apenas: "ok", "warn" ou "critical"
-- "content" deve vir em HTML simples
-- seja específico e cite melhorias reais de recrutamento
+- "content" deve ser HTML simples (use <ul><li> para listas e <strong> para destaques)
+- Seja direto, evite generalizações e forneça recomendações práticas e específicas
 `;
   } else {
     prompt = `
-Você é um especialista em recrutamento.
+Você é um especialista em recrutamento e análise de compatibilidade entre candidatos e vagas, com profundo conhecimento do mercado brasileiro.
 
-Analise a compatibilidade entre o currículo e a vaga fornecida.
+Compare o currículo com a vaga fornecida e determine o nível de compatibilidade real.
 
 ${resumeText ? `Currículo:\n${resumeText}` : '[Currículo enviado como PDF acima]'}
-${jobDesc ? `Descrição adicional da vaga:\n${jobDesc}` : ''}
-${uploadedJob ? '[Print da vaga enviado como imagem acima]' : ''}
+${jobDesc ? `\nDescrição da vaga:\n${jobDesc}` : ''}
+${uploadedJob ? '\n[Print da vaga enviado como imagem acima]' : ''}
+
+Considere na análise:
+- Aderência às exigências técnicas e comportamentais da vaga
+- Experiência e senioridade relevantes
+- Habilidades técnicas e comportamentais
+- Uso de palavras-chave da vaga no currículo
 
 Responda OBRIGATORIAMENTE em JSON neste formato:
 {
   "score": 0,
   "matchPct": 0,
-  "matchDesc": "1 frase sobre compatibilidade",
+  "matchDesc": "1 frase direta sobre o nível de compatibilidade",
   "sections": [
     {
       "icon": "📌",
@@ -1510,12 +1528,20 @@ Responda OBRIGATORIAMENTE em JSON neste formato:
   ]
 }
 
-Regras:
-- score deve ser um número de 0 a 100
-- matchPct deve ser um número de 0 a 100
-- crie no mínimo 5 seções
+Regras obrigatórias:
+- "score" de 0 a 100 representando a qualidade geral do currículo
+- "matchPct" de 0 a 100 representando o percentual real de compatibilidade com a vaga
+- "matchDesc" deve ser uma frase curta e direta sobre a compatibilidade
+- Crie EXATAMENTE 6 seções com os títulos e ícones abaixo, nessa ordem:
+  1. icon "🎯"  title "Compatibilidade Geral"         tag "match"    — explique o percentual de match e os principais motivos
+  2. icon "✅"  title "Pontos de Alta Compatibilidade" tag "ok"       — onde o candidato se encaixa bem na vaga
+  3. icon "❌"  title "Gaps e Falhas"                  tag "critical" — o que está faltando para atender a vaga
+  4. icon "⚠️"  title "Riscos de Reprovação"           tag "warn"     — motivos reais que podem levar à rejeição na triagem
+  5. icon "📈"  title "Como Melhorar o Match"          tag "warn"     — sugestões práticas e específicas para aumentar as chances
+  6. icon "🔑"  title "Palavras-chave Ausentes"        tag "warn"     — termos importantes da vaga que não aparecem no currículo
 - "tag" deve ser apenas: "ok", "warn", "critical" ou "match"
-- "content" deve vir em HTML simples
+- "content" deve ser HTML simples (use <ul><li> para listas e <strong> para destaques)
+- Seja direto, analítico e realista, evitando respostas genéricas
 `;
   }
 
@@ -1674,9 +1700,9 @@ if (hasChoiceYes && uploadedGenResume) {
 }
   userContent.push({
     type: 'text',
-    text: `Você é um especialista em currículos.
+    text: `Você é um especialista em criação de currículos profissionais otimizados para processos seletivos e sistemas ATS (Applicant Tracking System), com amplo conhecimento do mercado de trabalho brasileiro.
 
-Gere um currículo profissional completo em português brasileiro.
+Crie um currículo completo, competitivo e adaptado ao mercado brasileiro com base nos dados fornecidos abaixo.
 
 Dados do candidato:
 ${sourceText}
@@ -1684,11 +1710,41 @@ ${sourceText}
 ${jobText ? `Vaga desejada:\n${jobText}` : ''}
 ${uploadedGenJob ? '\n[Print da vaga enviado como imagem acima]' : ''}
 
-Gere o currículo em texto puro estruturado, sem JSON.
-Comece com o nome em maiúsculas, depois cargo/área, contato, e use títulos de seção em maiúsculas:
-EXPERIÊNCIA, FORMAÇÃO, HABILIDADES, etc.
-Use bullet points com "-" para listas.
-Linguagem de impacto, verbos de ação e otimização para ATS.`
+Regras obrigatórias de conteúdo:
+- Linguagem profissional, objetiva e voltada para resultados
+- Foco em conquistas e impacto mensurável (use números e percentuais quando possível)
+- Evitar frases genéricas como "profissional dedicado" ou "busco crescimento"
+- Usar verbos de ação no passado para experiências (ex: Reduziu, Implementou, Liderou)
+- Incluir palavras-chave relevantes para a área e para ATS
+- Adaptar o conteúdo à vaga desejada quando fornecida
+
+Estrutura obrigatória (use exatamente estes títulos em maiúsculas):
+
+NOME COMPLETO
+[nome do candidato em maiúsculas]
+
+RESUMO PROFISSIONAL
+[2 a 3 frases diretas destacando experiência, especialidade e valor entregue]
+
+EXPERIÊNCIA PROFISSIONAL
+[Para cada experiência, siga este modelo:]
+Cargo — Empresa (Período)
+- Resultado ou responsabilidade com foco em impacto
+- Resultado ou responsabilidade com foco em impacto
+
+FORMAÇÃO ACADÊMICA
+[Curso — Instituição (Ano de conclusão ou previsão)]
+
+HABILIDADES
+Técnicas: [lista separada por vírgulas]
+Comportamentais: [lista separada por vírgulas]
+
+DIFERENCIAIS
+[Certificações, idiomas, projetos relevantes ou outros diferenciais competitivos]
+
+Gere o currículo em texto puro estruturado, sem JSON, sem markdown com asteriscos.
+Use "-" para bullet points nas listas de experiência.
+O resultado deve estar pronto para ser copiado e usado diretamente.\`
   });
 
   document.getElementById('inputSection').style.display = 'none';
