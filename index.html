@@ -38,18 +38,135 @@
     margin: 0 auto;
   }
 
-  /* ── AUTH WALL ── */
-  #authWall {
-    display: flex;
-    flex-direction: column;
+  /* ── AUTH WALL (agora oculto por padrão — substituído por modal) ── */
+  #authWall { display: none; }
+  #authWall.hidden { display: none; }
+  /* App sempre visível */
+  #appContent { display: block; }
+  #appContent.visible { display: block; }
+
+  /* ── AUTH MODAL ── */
+  #authModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 2000;
     align-items: center;
     justify-content: center;
-    min-height: 80vh;
-    gap: 0;
+    padding: 20px;
+    animation: fadeUp 0.2s ease;
   }
-  #authWall.hidden { display: none; }
-  #appContent { display: none; }
-  #appContent.visible { display: block; }
+  #authModal.show { display: flex; }
+  .auth-modal-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+  }
+  .auth-modal-close:hover { color: var(--text); }
+
+  /* ── TOP BAR visitante ── */
+  .top-bar-guest-btns { display: flex; gap: 8px; align-items: center; }
+  .btn-guest-login {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 5px 10px; border-radius: 2px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-guest-login:hover { color: var(--text); border-color: var(--text); }
+  .btn-guest-register {
+    background: var(--accent); border: none; color: #000;
+    font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 5px 10px; border-radius: 2px;
+    cursor: pointer; transition: all 0.2s; font-weight: 500;
+  }
+  .btn-guest-register:hover { background: #d9ff70; }
+
+  /* ── PREVIEW GATE ── */
+  .preview-gate {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px 24px;
+    margin-top: 24px;
+    text-align: center;
+    background: #0f0f0f;
+    animation: fadeUp 0.3s ease;
+  }
+  .preview-gate-icon { font-size: 2rem; margin-bottom: 12px; display: block; }
+  .preview-gate h3 {
+    font-family: 'Playfair Display', serif; font-size: 1.2rem;
+    margin-bottom: 6px; color: var(--text);
+  }
+  .preview-gate p { font-size: 0.74rem; color: var(--muted); margin-bottom: 20px; line-height: 1.7; }
+  .preview-gate-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-gate-login {
+    background: var(--accent); color: #000; border: none; border-radius: 3px;
+    font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase; padding: 12px 22px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-gate-login:hover { background: #d9ff70; }
+  .btn-gate-register {
+    background: transparent; color: var(--text); border: 1px solid var(--border);
+    border-radius: 3px; font-family: 'DM Mono', monospace; font-size: 0.72rem;
+    letter-spacing: 2px; text-transform: uppercase; padding: 12px 22px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-gate-register:hover { border-color: var(--text); }
+  .btn-gate-full {
+    background: var(--accent); color: #000; border: none; border-radius: 3px;
+    font-family: 'DM Mono', monospace; font-size: 0.72rem; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase; padding: 14px 28px;
+    cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 8px;
+  }
+  .btn-gate-full:hover:not(:disabled) { background: #d9ff70; transform: translateY(-1px); }
+  .btn-gate-full:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+  .btn-gate-full.premium-btn { background: var(--purple); color: #fff; }
+  .btn-gate-full.premium-btn:hover:not(:disabled) { background: #c8a0ff; }
+
+  /* Preview card strips */
+  .preview-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+  .preview-card {
+    border: 1px solid var(--border); border-radius: 3px; padding: 14px;
+    background: var(--surface); text-align: left;
+  }
+  .preview-card-label {
+    font-size: 0.58rem; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px; display: block;
+  }
+  .preview-card.strength { border-color: rgba(200,240,96,0.3); }
+  .preview-card.strength .preview-card-label { color: var(--accent); }
+  .preview-card.improve { border-color: rgba(240,200,96,0.3); }
+  .preview-card.improve .preview-card-label { color: var(--accent2); }
+  .preview-card p { font-size: 0.74rem; color: var(--text); line-height: 1.6; }
+
+  /* Bloqueio comercial (usuário logado sem acesso) */
+  .commercial-gate {
+    border: 1px solid rgba(255,140,105,0.35);
+    background: rgba(255,140,105,0.06);
+    border-radius: 4px; padding: 22px 20px; text-align: center; margin-top: 8px;
+  }
+  .commercial-gate h4 {
+    font-family: 'Playfair Display', serif; font-size: 1rem;
+    color: var(--coral); margin-bottom: 6px;
+  }
+  .commercial-gate p { font-size: 0.72rem; color: var(--muted); margin-bottom: 14px; line-height: 1.6; }
+  
+
+  /* Tag "Prévia gratuita" */
+  .preview-free-tag {
+    display: inline-block; background: rgba(200,240,96,0.12);
+    border: 1px solid rgba(200,240,96,0.3); color: var(--accent);
+    font-size: 0.58rem; letter-spacing: 2px; text-transform: uppercase;
+    padding: 2px 10px; border-radius: 20px; margin-bottom: 10px;
+  }
 
   .auth-box {
     width: 100%;
@@ -599,13 +716,17 @@
 </head>
 <body>
 
-<!-- ══ AUTH WALL ══════════════════════════════════════════════════════════════ -->
-<div id="authWall">
-  <div class="auth-box">
+<!-- ══ AUTH WALL (oculto — substituído por #authModal abaixo) ═══════════════ -->
+<div id="authWall" style="display:none;"></div>
+
+<!-- ══ AUTH MODAL ════════════════════════════════════════════════════════════ -->
+<div id="authModal">
+  <div class="auth-box" style="position:relative;">
+    <button class="auth-modal-close" onclick="closeAuthModal()">✕</button>
     <div class="auth-logo">
       <div class="tag-ia">IA</div>
       <h1>CV<span>Analyzer</span></h1>
-      <p>Análise de Currículo com Inteligência Artificial</p>
+      <p id="authModalSubtitle">Análise de Currículo com Inteligência Artificial</p>
     </div>
 
     <div class="auth-tabs">
@@ -666,13 +787,24 @@
 <!-- ══ APP CONTENT (mostrado após login) ══════════════════════════════════════ -->
 <div id="appContent">
 
-  <!-- TOP BAR: usuário logado -->
+  <!-- TOP BAR: dinâmico — visitante ou logado -->
   <div class="top-bar">
-    <div class="user-info">
+    <!-- Lado esquerdo: visitante -->
+    <div id="topBarGuest" style="display:flex;align-items:center;gap:8px;">
+      <span style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;letter-spacing:-0.5px;">CV<span style="color:var(--accent)">Analyzer</span></span>
+    </div>
+    <!-- Lado esquerdo: logado (oculto até login) -->
+    <div class="user-info" id="topBarUser" style="display:none;">
       <div class="user-avatar" id="userAvatar">?</div>
       <span id="userEmail">—</span>
     </div>
-    <button class="btn-logout" onclick="handleLogout()">Sair</button>
+    <!-- Lado direito: visitante -->
+    <div class="top-bar-guest-btns" id="topBarGuestBtns">
+      <button class="btn-guest-login" onclick="openAuthModal('login')">Entrar</button>
+      <button class="btn-guest-register" onclick="openAuthModal('register')">Criar conta</button>
+    </div>
+    <!-- Lado direito: logado -->
+    <button class="btn-logout" id="topBarLogout" onclick="handleLogout()" style="display:none;">Sair</button>
   </div>
 
   <!-- COIN BAR -->
@@ -876,6 +1008,7 @@
       </div>
     </div>
 
+    <p id="previewFreeNote" style="font-size:0.66rem;color:var(--muted);text-align:center;margin-top:8px;">✦ Prévia gratuita disponível · Análise completa requer acesso ativo</p>
     <button class="btn-analyze standard-btn" id="analyzeBtn" onclick="analyzeResume()">
   ✦ Analisar Currículo
     </button>
@@ -911,6 +1044,10 @@
       <p class="match-bar-desc" id="matchBarDesc"></p>
     </div>
     <div id="sectionsContainer"></div>
+
+    <!-- PREVIEW GATE: injetado via JS na prévia -->
+    <div id="previewGate" style="display:none;"></div>
+
     <div class="upsell-banner" id="upsellBanner" style="display:none" onclick="setMode('premium'); document.getElementById('inputSection').style.display='block'; document.getElementById('resultsSection').classList.remove('show');">
       <span style="font-size:1.4rem">🎯</span>
       <div class="upsell-text">
@@ -972,7 +1109,9 @@ const API_ENDPOINT    = '/api/analyze';                           // seu proxy A
 // URL base do site — usada nos redirects de auth (e-mail de confirmação e Google OAuth)
 // Troque pelo seu domínio real quando fizer deploy (ex: 'https://cvanalyzer.com.br')
 const SITE_URL = 'https://c-vanalyzer-ia.vercel.app';
-// Moedas são creditadas via código de resgate enviado por e-mail após o pagamento
+// ── CTA comercial — troque pelo seu número real ──────────────────────────────
+const UPGRADE_URL = '/checkout';
+  // Moedas são creditadas via código de resgate enviado por e-mail após o pagamento
 
 // Códigos de resgate são validados no Supabase (tabela redeem_codes) — não ficam expostos no front-end
 
@@ -1017,11 +1156,11 @@ async function handleLogin() {
     errEl.classList.add('show');
     return;
   }
-  // Login OK: onAuthStateChange dispara e chama showApp().
+  // Login OK: onAuthStateChange dispara e chama showApp() via listener.
   // Fallback manual caso o evento demore (ex: rede lenta):
   if (data?.session?.user) {
     currentUser = data.session.user;
-try { await loadUserProfile(); } catch(e) {}
+    try { await loadUserProfile(); } catch(e) {}
     showApp();
   }
 }
@@ -1101,8 +1240,12 @@ async function handleLogout() {
   currentUser = null;
   uploadedFile = null;
   uploadedJob = null;
-  document.getElementById('appContent').classList.remove('visible');
-  document.getElementById('authWall').classList.remove('hidden');
+  clearDraftState();
+  clearPreviewState();
+  // App permanece visível — apenas volta ao estado visitante
+  updateTopBar();
+  updateWarning();
+  // Limpa campos de auth
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPassword').value = '';
   document.getElementById('loginError').classList.remove('show');
@@ -1151,27 +1294,88 @@ sb.auth.onAuthStateChange(async (event, session) => {
 
     showApp();
   } else {
+    // Usuário deslogado: manter app visível, atualizar top bar para visitante
     currentUser = null;
-    document.getElementById('appContent').classList.remove('visible');
-    document.getElementById('authWall').classList.remove('hidden');
+    updateTopBar();
+    updateWarning();
   }
 });
 
 async function loadUserProfile() {
-  return;
+  if (!currentUser) return;
+  // Nenhuma tabela de perfil neste modelo — acesso é controlado via user_access
+  // Apenas garante que updateWarning reflita o estado correto
 }
 
-function showApp() {
-  document.getElementById('authWall').classList.add('hidden');
-  document.getElementById('appContent').classList.add('visible');
+async function showApp() {
+  updateTopBar();
+  closeAuthModal();
 
-  const name = currentUser?.user_metadata?.full_name || currentUser?.email || 'U';
-  const email = currentUser?.email || '—';
+  // Se havia prévia gerada antes do login, restaura e atualiza o gate
+  if (hasPreviewState()) {
+    const restored = restoreDraftState(); // restaura os campos também
+    restorePreviewState();
+    // Atualiza o gate do preview conforme status de acesso atual
+    await refreshPreviewGate();
+  } else {
+    restoreDraftState();
+  }
 
-  document.getElementById('userEmail').textContent = email;
-  document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+  setTimeout(updateWarning, 300);
+}
 
-setTimeout(updateWarning, 300);
+// ─── Atualiza somente o bloco previewGate sem re-renderizar a prévia inteira ─
+async function refreshPreviewGate() {
+  const raw = sessionStorage.getItem('cvanalyzer_preview_state');
+  if (!raw) return;
+  const gate = document.getElementById('previewGate');
+  if (!gate || gate.style.display === 'none') return;
+
+  const { mode } = JSON.parse(raw);
+  const isPrem = (mode || currentMode) === 'premium';
+
+  if (!currentUser) {
+    // Não deveria acontecer aqui, mas por segurança
+    return;
+  }
+
+  const hasAccess = await checkAccess();
+  if (hasAccess) {
+    gate.innerHTML = `
+      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px;">Sua conta está ativa. Gere a análise completa agora:</p>
+      <button class="btn-gate-full ${isPrem ? 'premium-btn' : ''}" onclick="runFullAnalysis()">
+        ${isPrem ? '🎯 Gerar análise completa de match' : '✦ Gerar análise completa'}
+      </button>`;
+  } else {
+    gate.innerHTML = `
+  <div class="commercial-gate">
+    <h4>Sua conta foi criada, mas a análise completa exige acesso ativo</h4>
+    <p>Ative seu acesso para desbloquear a análise completa.</p>
+    <button class="btn-gate-full ${isPrem ? 'premium-btn' : ''}" onclick="window.location.href=UPGRADE_URL">
+      Ativar acesso
+    </button>
+  </div>`;
+  }
+}
+
+// ─── Atualiza top bar conforme estado de login ────────────────────────────────
+function updateTopBar() {
+  const isLogged = !!currentUser;
+  // Elementos visitante
+  document.getElementById('topBarGuest').style.display    = isLogged ? 'none' : 'flex';
+  document.getElementById('topBarGuestBtns').style.display= isLogged ? 'none' : 'flex';
+  // Elementos logado
+  document.getElementById('topBarUser').style.display     = isLogged ? 'flex' : 'none';
+  document.getElementById('topBarLogout').style.display   = isLogged ? '' : 'none';
+  if (isLogged) {
+    const name  = currentUser.user_metadata?.full_name || currentUser.email || 'U';
+    const email = currentUser.email || '—';
+    document.getElementById('userEmail').textContent = email;
+    document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+  }
+  // Atualiza nota de prévia
+  const noteEl = document.getElementById('previewFreeNote');
+  if (noteEl) noteEl.style.display = isLogged ? 'none' : 'block';
 }
   
 
@@ -1401,21 +1605,56 @@ function removeGenResumeFile() {
 // ── ANALYZE ───────────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 async function analyzeResume() {
-  
   const errorEl = document.getElementById('errorMsg');
   errorEl.classList.remove('show');
 
-  const allowed = await checkAccess();
-if (!allowed) {
-  errorEl.textContent = 'Você não tem acesso ativo.';
-  errorEl.classList.add('show');
-  return;
-}
-
+  // ── Modo gerador: exige login obrigatório ─────────────────────────────────
   if (currentMode === 'generator') {
+    if (!currentUser) {
+      saveDraftState();
+      openAuthModal('login', 'Para gerar seu currículo, crie uma conta gratuita.');
+      return;
+    }
+    // Logado: verificar acesso
+    const allowed = await checkAccess();
+    if (!allowed) {
+      errorEl.textContent = 'Você não tem acesso ativo para usar o Gerador.';
+      errorEl.classList.add('show');
+      return;
+    }
     await runGenerator();
     return;
   }
+
+  // ── Modos standard/premium ────────────────────────────────────────────────
+  const resumeText = document.getElementById('resumeText').value.trim();
+  if (!uploadedFile && !resumeText) {
+    errorEl.textContent = 'Envie seu currículo (PDF) ou cole o texto antes de analisar.';
+    errorEl.classList.add('show');
+    return;
+  }
+
+  // VISITANTE: gera prévia barata, depois pede login
+  if (!currentUser) {
+    saveDraftState();
+    await generatePreviewAnalysis();
+    return;
+  }
+
+  // LOGADO SEM ACESSO: gera prévia + mostra bloqueio comercial
+  const allowed = await checkAccess();
+  if (!allowed) {
+    await generatePreviewAnalysis(true); // true = modo bloqueio comercial
+    return;
+  }
+
+  // LOGADO COM ACESSO: análise completa normal
+  await runFullAnalysis();
+}
+
+// ─── Análise completa (extraída de analyzeResume original) ────────────────────
+async function runFullAnalysis() {
+  const errorEl = document.getElementById('errorMsg');
 
 
   const resumeText = document.getElementById('resumeText').value.trim();
@@ -1597,27 +1836,14 @@ Regras obrigatórias:
     document.getElementById('loadingSection').classList.remove('show');
     renderResults(result);
 
-    await sb.rpc('increment_usage', {
-  uid: currentUser.id
-});
+    await sb.rpc('increment_usage', { uid: currentUser.id });
 
     try {
-      const { error: historyError } = await sb.from('analysis_history').insert({
-        user_id: currentUser.id,
-        type: currentMode,
-        score: result.score || 0
+      await sb.from('analysis_history').insert({
+        user_id: currentUser.id, type: currentMode, score: result.score || 0
       });
+    } catch (e) { console.error('Erro ao salvar histórico:', e); }
 
-      if (historyError) {
-        console.error('Erro ao salvar histórico:', historyError);
-        showToast('Histórico não foi salvo', '');
-      } else {
-        console.log('Histórico salvo com sucesso');
-      }
-    } catch (e) {
-      console.error('Erro ao salvar histórico:', e);
-      showToast('Histórico não foi salvo', '');
-    }
   } catch (err) {
     document.getElementById('loadingSection').classList.remove('show');
     document.getElementById('inputSection').style.display = 'block';
@@ -1626,16 +1852,348 @@ Regras obrigatórias:
   }
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── PREVIEW VISUAL ESTÁTICA (sem chamar IA) ───────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+async function generatePreviewAnalysis(commercialGate = false) {
+  showLockedPreview(commercialGate);
+}
+
+function showLockedPreview(commercialGate = false) {
+  const isPrem = currentMode === 'premium';
+
+  // Score visual estimado (estático)
+  const fakeScore = isPrem ? 68 : 72;
+
+  document.getElementById('scoreDisplay').textContent = fakeScore;
+  document.getElementById('scoreDisplay').style.color = 'var(--gold)';
+
+  // Mode tag
+  const modeTag = document.getElementById('resultsModeTag');
+  if (isPrem) {
+    modeTag.textContent = '🎯 Match por Vaga';
+    modeTag.className = 'results-mode-tag premium';
+    document.getElementById('resultsTitle').textContent = 'Prévia de Compatibilidade';
+    document.getElementById('matchBarWrap').style.display = 'block';
+    document.getElementById('matchPct').textContent = '68%';
+    setTimeout(() => { document.getElementById('matchBarFill').style.width = '68%'; }, 50);
+    document.getElementById('matchBarDesc').textContent = 'Seu perfil aparenta ter aderência parcial à vaga, mas existem pontos que podem impactar sua triagem.';
+  } else {
+    modeTag.textContent = '📄 Análise Geral';
+    modeTag.className = 'results-mode-tag standard';
+    document.getElementById('resultsTitle').textContent = 'Prévia da Análise';
+    document.getElementById('matchBarWrap').style.display = 'none';
+  }
+
+  // Cards visuais estáticos
+  const container = document.getElementById('sectionsContainer');
+  container.innerHTML = '';
+
+  // Headline
+  const headEl = document.createElement('div');
+  headEl.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:14px 16px;margin-bottom:10px;font-size:0.8rem;line-height:1.6;color:var(--text);';
+  headEl.innerHTML = '<span style="font-size:0.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px;">Resumo IA</span>'
+    + (isPrem
+      ? 'Seu perfil aparenta ter aderência parcial à vaga, mas existem pontos que podem impactar sua triagem.'
+      : 'Seu currículo apresenta potencial competitivo, mas há pontos importantes a melhorar.');
+  container.appendChild(headEl);
+
+  const cardsDiv = document.createElement('div');
+  cardsDiv.className = 'preview-cards';
+
+  const positives = isPrem
+    ? [['💪 Ponto forte', 'Aderência inicial detectada com parte dos requisitos da vaga.'],
+       ['💪 Ponto forte', 'Compatibilidade com parte dos requisitos identificados.']]
+    : [['💪 Ponto forte', 'Estrutura do currículo identificada e legível.'],
+       ['💪 Ponto forte', 'Experiências relevantes detectadas no documento.']];
+
+  const negatives = isPrem
+    ? [['❌ Gap', '🔒 Gaps principais da candidatura — desbloqueie para ver'],
+       ['❌ Gap', '🔒 Palavras-chave ausentes — desbloqueie para ver']]
+    : [['⚠️ Melhoria', '🔒 Sugestões específicas de melhoria — desbloqueie para ver'],
+       ['⚠️ Melhoria', '🔒 Reescrita estratégica de trechos — desbloqueie para ver']];
+
+  positives.forEach(([label, text]) => {
+    const c = document.createElement('div');
+    c.className = 'preview-card strength';
+    c.innerHTML = '<span class="preview-card-label">' + label + '</span><p>' + text + '</p>';
+    cardsDiv.appendChild(c);
+  });
+  negatives.forEach(([label, text]) => {
+    const c = document.createElement('div');
+    c.className = 'preview-card improve';
+    c.style.cssText += 'opacity:0.5;filter:blur(1px);user-select:none;pointer-events:none;';
+    c.innerHTML = '<span class="preview-card-label">' + label + '</span><p>' + text + '</p>';
+    cardsDiv.appendChild(c);
+  });
+  container.appendChild(cardsDiv);
+
+  document.getElementById('upsellBanner').style.display = 'none';
+  document.getElementById('upsellGenerator').style.display = 'none';
+  document.getElementById('generatedCvWrap').style.display = 'none';
+
+  // Preview gate
+  const gate = document.getElementById('previewGate');
+  gate.style.display = 'block';
+
+  if (!currentUser) {
+    gate.innerHTML = `
+      <span class="preview-free-tag">Essa é sua prévia gratuita</span>
+      <span class="preview-gate-icon">🔐</span>
+      <h3>Crie sua conta para continuar</h3>
+      <p>A análise completa inclui todos os pontos de melhoria, sugestões práticas e exemplos reescritos pela IA. É gratuito criar sua conta.</p>
+      <div class="preview-gate-btns">
+        <button class="btn-gate-login" onclick="openAuthModal('register','Crie sua conta para ver a análise completa.')">Criar conta grátis</button>
+        <button class="btn-gate-register" onclick="openAuthModal('login')">Já tenho conta</button>
+      </div>`;
+  } else if (commercialGate) {
+   gate.innerHTML = `
+  <div class="commercial-gate">
+    <h4>Sua conta foi criada, mas a análise completa exige acesso ativo</h4>
+    <p>Ative seu acesso para desbloquear a análise completa e as demais funcionalidades.</p>
+    <button class="btn-gate-full ${isPrem ? 'premium-btn' : ''}" onclick="window.location.href=UPGRADE_URL">
+      Ativar acesso
+    </button>
+  </div>`;
+  } else {
+    gate.innerHTML = `
+      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px;">Sua conta está ativa. Gere a análise completa agora:</p>
+      <button class="btn-gate-full ${isPrem ? 'premium-btn' : ''}" onclick="runFullAnalysis()">
+        ${isPrem ? '🎯 Gerar análise completa de match' : '✦ Gerar análise completa'}
+      </button>`;
+  }
+
+  // Salva só o modo (não tem resultado de IA para salvar)
+  sessionStorage.setItem('cvanalyzer_preview_state', JSON.stringify({ mode: currentMode, commercialGate }));
+
+  document.getElementById('inputSection').style.display = 'none';
+  document.getElementById('resultsSection').classList.add('show');
+}
+
+
+// ─── Renderiza resultados de prévia ──────────────────────────────────────────
+function renderPreviewResults(result, commercialGate = false) {
+  const score = result.score || 0;
+  const isPrem = currentMode === 'premium';
+
+  // Score
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('scoreDisplay').style.color = score >= 70 ? 'var(--accent)' : score >= 50 ? 'var(--gold)' : 'var(--danger)';
+
+  // Mode tag
+  const modeTag = document.getElementById('resultsModeTag');
+  if (isPrem) {
+    modeTag.textContent = '🎯 Match por Vaga';
+    modeTag.className = 'results-mode-tag premium';
+    document.getElementById('resultsTitle').textContent = 'Prévia de Compatibilidade';
+    if (result.matchPct !== undefined) {
+      document.getElementById('matchBarWrap').style.display = 'block';
+      document.getElementById('matchPct').textContent = result.matchPct + '%';
+      setTimeout(() => document.getElementById('matchBarFill').style.width = result.matchPct + '%', 50);
+      document.getElementById('matchBarDesc').textContent = result.preview?.headline || '';
+    }
+  } else {
+    modeTag.textContent = '📄 Análise Geral';
+    modeTag.className = 'results-mode-tag standard';
+    document.getElementById('resultsTitle').textContent = 'Prévia da Análise';
+    document.getElementById('matchBarWrap').style.display = 'none';
+  }
+
+  // Seções de prévia (pontos fortes e melhorias)
+  const container = document.getElementById('sectionsContainer');
+  container.innerHTML = '';
+  const p = result.preview || {};
+  const strengths = p.strengths || [];
+  const weaknesses = p.improvements || p.gaps || [];
+
+  if (p.headline) {
+    const headEl = document.createElement('div');
+    headEl.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:14px 16px;margin-bottom:10px;font-size:0.8rem;line-height:1.6;color:var(--text);';
+    headEl.innerHTML = '<span style="font-size:0.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px;">Resumo IA</span>' + p.headline;
+    container.appendChild(headEl);
+  }
+
+  const cardsDiv = document.createElement('div');
+  cardsDiv.className = 'preview-cards';
+
+  strengths.slice(0,2).forEach(s => {
+    const c = document.createElement('div');
+    c.className = 'preview-card strength';
+    c.innerHTML = '<span class="preview-card-label">💪 Ponto forte</span><p>' + s + '</p>';
+    cardsDiv.appendChild(c);
+  });
+  weaknesses.slice(0,2).forEach(w => {
+    const c = document.createElement('div');
+    c.className = 'preview-card improve';
+    c.innerHTML = '<span class="preview-card-label">' + (isPrem ? '❌ Gap' : '⚠️ Melhoria') + '</span><p>' + w + '</p>';
+    cardsDiv.appendChild(c);
+  });
+  container.appendChild(cardsDiv);
+
+  // Esconde upsells de modo
+  document.getElementById('upsellBanner').style.display = 'none';
+  document.getElementById('upsellGenerator').style.display = 'none';
+  document.getElementById('generatedCvWrap').style.display = 'none';
+
+  // ── Preview gate ─────────────────────────────────────────────────────────
+  const gate = document.getElementById('previewGate');
+  gate.style.display = 'block';
+
+  if (!currentUser) {
+    // ── a) VISITANTE: pede criação de conta ──────────────────────────────────
+    gate.innerHTML = `
+      <span class="preview-free-tag">Essa é sua prévia gratuita</span>
+      <span class="preview-gate-icon">🔐</span>
+      <h3>Crie sua conta para continuar</h3>
+      <p>A análise completa inclui todos os pontos de melhoria, sugestões práticas e exemplos reescritos pela IA. É gratuito criar sua conta.</p>
+      <div class="preview-gate-btns">
+        <button class="btn-gate-login" onclick="openAuthModal('register','Crie sua conta para ver a análise completa.')">Criar conta grátis</button>
+        <button class="btn-gate-register" onclick="openAuthModal('login')">Já tenho conta</button>
+      </div>`;
+  } else if (commercialGate) {
+    // ── b) LOGADO SEM ACESSO: bloqueio comercial ─────────────────────────────
+    gate.innerHTML = `
+      <div class="commercial-gate">
+        <h4>Sua conta foi criada, mas a análise completa exige acesso ativo</h4>
+        <p>Usuários com acesso ativo desbloqueiam análise completa, gerador de currículo e muito mais.<br>Entre em contato para ativar seu acesso.</p>
+        <button class="btn-whatsapp" onclick="window.open(WHATSAPP_URL,'_blank')">
+          💬 Falar no WhatsApp para ativar
+        </button>
+      </div>`;
+  } else {
+    // ── c) LOGADO COM ACESSO: CTA direto para análise completa ───────────────
+    gate.innerHTML = `
+      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px;">Sua conta está ativa. Gere a análise completa agora:</p>
+      <button class="btn-gate-full ${isPrem ? 'premium-btn' : ''}" onclick="runFullAnalysis()">
+        ${isPrem ? '🎯 Gerar análise completa de match' : '✦ Gerar análise completa'}
+      </button>`;
+  }
+
+  document.getElementById('resultsSection').classList.add('show');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── DRAFT STATE — salva e restaura formulário antes/depois do login ───────────
+// ═══════════════════════════════════════════════════════════════════════════════
+function saveDraftState() {
+  const genChoiceYes = document.getElementById('genChoiceYes');
+  const draft = {
+    mode:       currentMode,
+    text:       document.getElementById('resumeText')?.value || '',
+    jobDesc:    document.getElementById('jobDescText')?.value || '',
+    area:       document.getElementById('areaSelect')?.value || 'outro',
+    level:      document.getElementById('levelSelect')?.value || 'clt',
+    genJob:     document.getElementById('genJobText')?.value || '',
+    genChoice:  genChoiceYes?.classList.contains('active') ? 'yes' : 'no',
+    gqName:     document.getElementById('gqName')?.value || '',
+    gqArea:     document.getElementById('gqArea')?.value || '',
+    gqEmail:    document.getElementById('gqEmail')?.value || '',
+    gqContact:  document.getElementById('gqContact')?.value || '',
+    gqEducation:document.getElementById('gqEducation')?.value || '',
+    gqExperience:document.getElementById('gqExperience')?.value || '',
+    gqSkills:   document.getElementById('gqSkills')?.value || '',
+    genOldResume:document.getElementById('genOldResume')?.value || '',
+    hasFile:    !!uploadedFile,
+    hasJobImg:  !!uploadedJob,
+  };
+  sessionStorage.setItem('cvanalyzer_draft', JSON.stringify(draft));
+}
+
+function restoreDraftState() {
+  const raw = sessionStorage.getItem('cvanalyzer_draft');
+  if (!raw) return false;
+  try {
+    const draft = JSON.parse(raw);
+    if (draft.mode) setMode(draft.mode);
+    const setVal = (id, val) => { if (val) { const el = document.getElementById(id); if (el) el.value = val; } };
+    setVal('resumeText',   draft.text);
+    setVal('jobDescText',  draft.jobDesc);
+    setVal('areaSelect',   draft.area);
+    setVal('levelSelect',  draft.level);
+    setVal('genJobText',   draft.genJob);
+    setVal('gqName',       draft.gqName);
+    setVal('gqArea',       draft.gqArea);
+    setVal('gqEmail',      draft.gqEmail);
+    setVal('gqContact',    draft.gqContact);
+    setVal('gqEducation',  draft.gqEducation);
+    setVal('gqExperience', draft.gqExperience);
+    setVal('gqSkills',     draft.gqSkills);
+    setVal('genOldResume', draft.genOldResume);
+    // Restaura aba do gerador
+    if (draft.genChoice) switchCvChoice(draft.genChoice);
+    // Avisa sobre arquivos binários que não podem ser restaurados
+    if (draft.hasFile && !uploadedFile) {
+      showToast('Bem-vindo de volta! Reenvie o PDF do currículo para continuar.', '');
+    }
+    return true;
+  } catch(e) { console.warn('[draft] erro ao restaurar:', e); return false; }
+}
+
+function clearDraftState() {
+  sessionStorage.removeItem('cvanalyzer_draft');
+}
+
+// ─── Preview state — persiste o resultado da prévia para restaurar pós-login ──
+function savePreviewState(result, commercialGate) {
+  sessionStorage.setItem('cvanalyzer_preview_state', JSON.stringify({ result, commercialGate, mode: currentMode }));
+}
+
+function hasDraftState() {
+  return !!sessionStorage.getItem('cvanalyzer_draft');
+}
+
+function hasPreviewState() {
+  return !!sessionStorage.getItem('cvanalyzer_preview_state');
+}
+
+function restorePreviewState() {
+  const raw = sessionStorage.getItem('cvanalyzer_preview_state');
+  if (!raw) return false;
+  try {
+    const { mode, commercialGate } = JSON.parse(raw);
+    if (mode) currentMode = mode;
+    showLockedPreview(commercialGate || false);
+    return true;
+  } catch(e) { return false; }
+}
+
+function clearPreviewState() {
+  sessionStorage.removeItem('cvanalyzer_preview_state');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ── AUTH MODAL — abre/fecha modal de login/cadastro ──────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+function openAuthModal(tab = 'login', subtitle = '') {
+  document.getElementById('authModal').classList.add('show');
+  showTab(tab);
+  if (subtitle) {
+    const el = document.getElementById('authModalSubtitle');
+    if (el) el.textContent = subtitle;
+  }
+  // Limpa erros anteriores
+  ['loginError','registerError'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+  });
+}
+
+function closeAuthModal() {
+  document.getElementById('authModal').classList.remove('show');
+  // Restaura subtítulo padrão
+  const el = document.getElementById('authModalSubtitle');
+  if (el) el.textContent = 'Análise de Currículo com Inteligência Artificial';
+}
+
+// Fechar modal clicando fora do box
+document.getElementById('authModal').addEventListener('click', function(e) {
+  if (e.target === this) closeAuthModal();
+});
+
 async function runGenerator() {
   const errorEl = document.getElementById('errorMsg');
   errorEl.classList.remove('show');
-
-  const allowed = await checkAccess();
-  if (!allowed) {
-    errorEl.textContent = 'Você não tem acesso ativo.';
-    errorEl.classList.add('show');
-    return;
-  }
+  // Acesso já verificado em analyzeResume() antes de chamar runGenerator()
  
 
   const jobText = document.getElementById('genJobText').value.trim();
@@ -1814,6 +2372,12 @@ O resultado deve estar pronto para ser copiado e usado diretamente.`
 // ── RENDER RESULTS ────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 function renderResults(result) {
+  // Limpa qualquer prévia anterior antes de exibir análise completa
+  const pgClean = document.getElementById('previewGate');
+  if (pgClean) { pgClean.innerHTML = ''; pgClean.style.display = 'none'; }
+  clearPreviewState();
+  document.getElementById('loadingSub').textContent = '';
+
   const score = result.score || 0;
   document.getElementById('scoreDisplay').textContent = score;
   document.getElementById('scoreDisplay').style.color = score >= 70 ? 'var(--accent)' : score >= 50 ? 'var(--gold)' : 'var(--danger)';
@@ -1940,6 +2504,12 @@ function resetForm() {
   document.getElementById('matchBarFill').style.width = '0%';
   document.getElementById('generatedCvWrap').style.display = 'none';
   document.getElementById('upsellGenerator').style.display = 'none';
+  clearPreviewState();
+  clearDraftState();
+  // Limpa preview gate
+  const pg = document.getElementById('previewGate');
+  if (pg) { pg.innerHTML = ''; pg.style.display = 'none'; }
+  document.getElementById('loadingSub').textContent = '';
   ['genOldResume','gqName','gqArea','gqEmail','gqContact','gqEducation','gqExperience','gqSkills']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.querySelector('.score-label').textContent = 'score geral';
@@ -1970,9 +2540,8 @@ function openConfirmationScreen() {
 
 function closeConfirmationScreen() {
   document.getElementById('confirmationScreen').style.display = 'none';
-  document.getElementById('authWall').classList.remove('hidden');
-  document.getElementById('appContent').classList.remove('visible');
-  showTab('login');
+  // App permanece visível — abre modal de login para o usuário entrar
+  openAuthModal('login', 'E-mail confirmado! Faça login para continuar.');
 }
 
 async function handleEmailConfirmationReturn() {
@@ -1998,22 +2567,27 @@ window.addEventListener('load', () => {
   handleEmailConfirmationReturn();
 });
 async function updateWarning() {
-  const w = document.getElementById('coinWarning');
+  const w   = document.getElementById('coinWarning');
   const btn = document.getElementById('analyzeBtn');
   const planEl = document.getElementById('coinCount');
+  const isGenerator = currentMode === 'generator';
 
+  // ── VISITANTE ─────────────────────────────────────────────────────────────
   if (!currentUser) {
-    if (planEl) planEl.textContent = 'Sem login';
-
+    if (planEl) planEl.textContent = 'Prévia grátis';
+    if (btn) btn.disabled = false; // visitante SEMPRE pode clicar
     if (w) {
-      w.innerHTML = '⚠ Faça login para usar.';
+      if (isGenerator) {
+        w.innerHTML = '✦ O Gerador de Currículo requer uma conta. Crie a sua — é grátis!';
+      } else {
+        w.innerHTML = '✦ Você pode gerar uma <strong>prévia gratuita</strong>. Faça login depois para continuar com a análise completa.';
+      }
       w.classList.add('show');
     }
-
-    if (btn) btn.disabled = true;
     return;
   }
 
+  // ── LOGADO — busca acesso ──────────────────────────────────────────────────
   const { data, error } = await sb
     .from('user_access')
     .select('*')
@@ -2023,63 +2597,58 @@ async function updateWarning() {
   const today = new Date().toISOString().slice(0, 10);
 
   if (error || !data) {
+    // Logado sem registro de acesso
     if (planEl) planEl.textContent = 'Sem acesso';
-
+    if (btn) btn.disabled = isGenerator; // standard/premium: permite prévia; generator: bloqueia
     if (w) {
-      w.innerHTML = '⚠ Seu acesso não está ativo ou seu limite diário foi atingido.';
+      if (isGenerator) {
+w.innerHTML = '⚠ O Gerador requer acesso ativo. <a onclick="window.location.href=UPGRADE_URL" style="color:var(--gold);cursor:pointer;text-decoration:underline;">Ativar acesso</a>';
+      } else {
+        w.innerHTML = '⚠ Sua análise completa exige acesso ativo. Você pode ver uma <strong>prévia gratuita</strong> agora.';
+      }
       w.classList.add('show');
     }
-
-    if (btn) btn.disabled = true;
     return;
   }
 
+  // Reset diário
   if (data.last_reset_date !== today) {
-    await sb
-      .from('user_access')
-      .update({
-        used_today: 0,
-        last_reset_date: today
-      })
-      .eq('user_id', currentUser.id);
-
+    await sb.from('user_access').update({ used_today: 0, last_reset_date: today }).eq('user_id', currentUser.id);
     data.used_today = 0;
   }
 
   const now = new Date();
   const expires = data.access_expires_at ? new Date(data.access_expires_at) : null;
   const expired = expires && now > expires;
-  const limitReached = data.used_today >= data.daily_limit;
   const active = data.access_active && !expired;
+  const limitReached = data.used_today >= data.daily_limit;
 
   if (!active) {
     if (planEl) planEl.textContent = 'Inativo';
-
+    if (btn) btn.disabled = isGenerator;
     if (w) {
-      w.innerHTML = '⚠ Seu acesso não está ativo.';
+      if (isGenerator) {
+w.innerHTML = '⚠ Seu acesso expirou. <a onclick="window.location.href=UPGRADE_URL" style="color:var(--gold);cursor:pointer;text-decoration:underline;">Renovar acesso</a>';
+      } else {
+w.innerHTML = '⚠ Seu acesso não está ativo. Você pode ver uma <strong>prévia gratuita</strong> ou <a onclick="window.location.href=UPGRADE_URL" style="color:var(--gold);cursor:pointer;text-decoration:underline;">ativar acesso</a>.';
+      }
       w.classList.add('show');
     }
-
-    if (btn) btn.disabled = true;
     return;
   }
 
   if (limitReached) {
-    if (planEl) planEl.textContent = 'Ativo';
-
+    if (planEl) planEl.textContent = 'Limite atingido';
+    if (btn) btn.disabled = true;
     if (w) {
-      w.innerHTML = '⚠ Seu limite diário foi atingido.';
+w.innerHTML = '⚠ Seu limite diário de análises foi atingido. Volte amanhã para continuar.';
       w.classList.add('show');
     }
-
-    if (btn) btn.disabled = true;
     return;
   }
 
-  if (planEl) {
-    planEl.textContent = `Ativo · ${data.daily_limit - data.used_today} usos restantes`;
-  }
-
+  // Acesso ativo e dentro do limite
+  if (planEl) planEl.textContent = `Ativo · ${data.daily_limit - data.used_today} usos restantes`;
   if (w) w.classList.remove('show');
   if (btn) btn.disabled = false;
 }
@@ -2093,29 +2662,18 @@ async function updateWarning() {
     .maybeSingle();
 
   if (error || !data) return false;
+  if (!data.access_active) return false;
 
   const now = new Date();
-const expires = data.access_expires_at ? new Date(data.access_expires_at) : null;
-const expired = expires && now > expires;
-    if (!data.access_active || expired) {
-  return false;
-}
-  const today = new Date().toISOString().slice(0,10);
+  const expires = data.access_expires_at ? new Date(data.access_expires_at) : null;
+  if (expires && now > expires) return false;
 
+  const today = new Date().toISOString().slice(0, 10);
   if (data.last_reset_date !== today) {
-    await sb
-      .from('user_access')
-      .update({
-        used_today: 0,
-        last_reset_date: today
-      })
+    await sb.from('user_access')
+      .update({ used_today: 0, last_reset_date: today })
       .eq('user_id', currentUser.id);
-
     data.used_today = 0;
-  }
-
-  if (!data.access_active || now > expires) {
-    return false;
   }
 
   if (data.used_today >= data.daily_limit) {
