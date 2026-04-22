@@ -827,9 +827,8 @@
 
   <!-- INPUT SECTION -->
   <div id="inputSection">
-    <div class="coin-low-warning" id="coinWarning">
-  ⚠ Seu acesso não está ativo.<br>
-  Entre em contato para liberar sua assinatura.
+   <div class="coin-low-warning" id="coinWarning">
+  ✦ Você pode gerar uma prévia gratuita. Faça login para continuar com a análise completa.
 </div>
     <div class="mode-toggle">
       <div class="mode-card active-standard" id="modeCardStandard" onclick="setMode('standard')">
@@ -1972,105 +1971,7 @@ function showLockedPreview(commercialGate = false) {
 
 
 // ─── Renderiza resultados de prévia ──────────────────────────────────────────
-function renderPreviewResults(result, commercialGate = false) {
-  const score = result.score || 0;
-  const isPrem = currentMode === 'premium';
 
-  // Score
-  document.getElementById('scoreDisplay').textContent = score;
-  document.getElementById('scoreDisplay').style.color = score >= 70 ? 'var(--accent)' : score >= 50 ? 'var(--gold)' : 'var(--danger)';
-
-  // Mode tag
-  const modeTag = document.getElementById('resultsModeTag');
-  if (isPrem) {
-    modeTag.textContent = '🎯 Match por Vaga';
-    modeTag.className = 'results-mode-tag premium';
-    document.getElementById('resultsTitle').textContent = 'Prévia de Compatibilidade';
-    if (result.matchPct !== undefined) {
-      document.getElementById('matchBarWrap').style.display = 'block';
-      document.getElementById('matchPct').textContent = result.matchPct + '%';
-      setTimeout(() => document.getElementById('matchBarFill').style.width = result.matchPct + '%', 50);
-      document.getElementById('matchBarDesc').textContent = result.preview?.headline || '';
-    }
-  } else {
-    modeTag.textContent = '📄 Análise Geral';
-    modeTag.className = 'results-mode-tag standard';
-    document.getElementById('resultsTitle').textContent = 'Prévia da Análise';
-    document.getElementById('matchBarWrap').style.display = 'none';
-  }
-
-  // Seções de prévia (pontos fortes e melhorias)
-  const container = document.getElementById('sectionsContainer');
-  container.innerHTML = '';
-  const p = result.preview || {};
-  const strengths = p.strengths || [];
-  const weaknesses = p.improvements || p.gaps || [];
-
-  if (p.headline) {
-    const headEl = document.createElement('div');
-    headEl.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:14px 16px;margin-bottom:10px;font-size:0.8rem;line-height:1.6;color:var(--text);';
-    headEl.innerHTML = '<span style="font-size:0.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px;">Resumo IA</span>' + p.headline;
-    container.appendChild(headEl);
-  }
-
-  const cardsDiv = document.createElement('div');
-  cardsDiv.className = 'preview-cards';
-
-  strengths.slice(0,2).forEach(s => {
-    const c = document.createElement('div');
-    c.className = 'preview-card strength';
-    c.innerHTML = '<span class="preview-card-label">💪 Ponto forte</span><p>' + s + '</p>';
-    cardsDiv.appendChild(c);
-  });
-  weaknesses.slice(0,2).forEach(w => {
-    const c = document.createElement('div');
-    c.className = 'preview-card improve';
-    c.innerHTML = '<span class="preview-card-label">' + (isPrem ? '❌ Gap' : '⚠️ Melhoria') + '</span><p>' + w + '</p>';
-    cardsDiv.appendChild(c);
-  });
-  container.appendChild(cardsDiv);
-
-  // Esconde upsells de modo
-  document.getElementById('upsellBanner').style.display = 'none';
-  document.getElementById('upsellGenerator').style.display = 'none';
-  document.getElementById('generatedCvWrap').style.display = 'none';
-
-  // ── Preview gate ─────────────────────────────────────────────────────────
-  const gate = document.getElementById('previewGate');
-  gate.style.display = 'block';
-
-  if (!currentUser) {
-    // ── a) VISITANTE: pede criação de conta ──────────────────────────────────
-    gate.innerHTML = `
-      <span class="preview-free-tag">Essa é sua prévia gratuita</span>
-      <span class="preview-gate-icon">🔐</span>
-      <h3>Crie sua conta para continuar</h3>
-      <p>A análise completa inclui todos os pontos de melhoria, sugestões práticas e exemplos reescritos pela IA. É gratuito criar sua conta.</p>
-      <div class="preview-gate-btns">
-        <button class="btn-gate-login" onclick="openAuthModal('register','Crie sua conta para ver a análise completa.')">Criar conta grátis</button>
-        <button class="btn-gate-register" onclick="openAuthModal('login')">Já tenho conta</button>
-      </div>`;
-  } else if (commercialGate) {
-    // ── b) LOGADO SEM ACESSO: bloqueio comercial ─────────────────────────────
-    gate.innerHTML = `
-      <div class="commercial-gate">
-        <h4>Sua conta foi criada, mas a análise completa exige acesso ativo</h4>
-        <p>Usuários com acesso ativo desbloqueiam análise completa, gerador de currículo e muito mais.<br>Entre em contato para ativar seu acesso.</p>
-        <button class="btn-whatsapp" onclick="window.open(WHATSAPP_URL,'_blank')">
-          💬 Falar no WhatsApp para ativar
-        </button>
-      </div>`;
-  } else {
-    // ── c) LOGADO COM ACESSO: CTA direto para análise completa ───────────────
-    gate.innerHTML = `
-      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px;">Sua conta está ativa. Gere a análise completa agora:</p>
-      <button class="btn-gate-full ${isPrem ? 'premium-btn' : ''}" onclick="runFullAnalysis()">
-        ${isPrem ? '🎯 Gerar análise completa de match' : '✦ Gerar análise completa'}
-      </button>`;
-  }
-
-  document.getElementById('resultsSection').classList.add('show');
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── DRAFT STATE — salva e restaura formulário antes/depois do login ───────────
