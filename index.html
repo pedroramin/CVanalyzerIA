@@ -1291,79 +1291,6 @@ function handleFile(file) {
     };
     reader.readAsText(file, 'UTF-8');
   }
-  // ─── Upload (Gerador de Currículo) ─────────────────────────────
-
-let uploadedGenResume = null;
-
-const genResumeDropZone = document.getElementById('genResumeDropZone');
-const genResumeFileInput = document.getElementById('genResumeFileInput');
-
-if (genResumeDropZone && genResumeFileInput) {
-  genResumeDropZone.addEventListener('dragover', e => {
-    e.preventDefault();
-    genResumeDropZone.classList.add('drag-over');
-  });
-
-  genResumeDropZone.addEventListener('dragleave', () => {
-    genResumeDropZone.classList.remove('drag-over');
-  });
-
-  genResumeDropZone.addEventListener('drop', e => {
-    e.preventDefault();
-    genResumeDropZone.classList.remove('drag-over');
-    const f = e.dataTransfer.files[0];
-    if (f) handleGenResumeFile(f);
-  });
-
-  genResumeFileInput.addEventListener('change', () => {
-    if (genResumeFileInput.files[0]) handleGenResumeFile(genResumeFileInput.files[0]);
-  });
-}
-
-function handleGenResumeFile(file) {
-  const errorEl = document.getElementById('errorMsg');
-  errorEl.classList.remove('show');
-
-  const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-  const isTxt = file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt');
-
-  if (!isPdf && !isTxt) {
-    errorEl.textContent = 'Formato não suportado. Use PDF ou TXT.';
-    errorEl.classList.add('show');
-    genResumeFileInput.value = '';
-    return;
-  }
-
-  document.getElementById('genResumeFileName').textContent = file.name;
-  document.getElementById('genResumeFileInfo').classList.add('show');
-
-  if (isPdf) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      uploadedGenResume = {
-        base64: e.target.result.split(',')[1],
-        mediaType: 'application/pdf',
-        name: file.name
-      };
-    };
-    reader.readAsDataURL(file);
-  } else {
-    uploadedGenResume = null;
-    const reader = new FileReader();
-    reader.onload = e => {
-      document.getElementById('genOldResume').value = e.target.result;
-    };
-    reader.readAsText(file, 'UTF-8');
-  }
-}
-
-function removeGenResumeFile() {
-  uploadedGenResume = null;
-  genResumeFileInput.value = '';
-  document.getElementById('genResumeFileInfo').classList.remove('show');
-  document.getElementById('genResumeFileName').textContent = '';
-}
-}
 
 function removeFile() {
   uploadedFile = null; fileInput.value = '';
@@ -1400,7 +1327,8 @@ function removeGenJobImage() {
   document.getElementById('genJobPreview').classList.remove('show');
   genJobDropZone.style.display = '';
 }
-
+// ─── Upload (Gerador de Currículo) ───────────────────────────── 
+const genResumeDropZone = document.getElementById('genResumeDropZone'); const genResumeFileInput = document.getElementById('genResumeFileInput'); if (genResumeDropZone && genResumeFileInput) { genResumeDropZone.addEventListener('dragover', e => { e.preventDefault(); genResumeDropZone.classList.add('drag-over'); }); genResumeDropZone.addEventListener('dragleave', () => { genResumeDropZone.classList.remove('drag-over'); }); genResumeDropZone.addEventListener('drop', e => { e.preventDefault(); genResumeDropZone.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) handleGenResumeFile(f); }); genResumeFileInput.addEventListener('change', () => { if (genResumeFileInput.files[0]) handleGenResumeFile(genResumeFileInput.files[0]); }); } function handleGenResumeFile(file) { const errorEl = document.getElementById('errorMsg'); errorEl.classList.remove('show'); const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'); const isTxt = file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt'); if (!isPdf && !isTxt) { errorEl.textContent = 'Formato não suportado. Use PDF ou TXT.'; errorEl.classList.add('show'); genResumeFileInput.value = ''; return; } document.getElementById('genResumeFileName').textContent = file.name; document.getElementById('genResumeFileInfo').classList.add('show'); if (isPdf) { const reader = new FileReader(); reader.onload = e => { uploadedGenResume = { base64: e.target.result.split(',')[1], mediaType: 'application/pdf', name: file.name }; }; reader.readAsDataURL(file); } else { uploadedGenResume = null; const reader = new FileReader(); reader.onload = e => { document.getElementById('genOldResume').value = e.target.result; }; reader.readAsText(file, 'UTF-8'); } } function removeGenResumeFile() { uploadedGenResume = null; genResumeFileInput.value = ''; document.getElementById('genResumeFileInfo').classList.remove('show'); document.getElementById('genResumeFileName').textContent = ''; } }
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── ANALYZE ───────────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1640,15 +1568,15 @@ async function runGenerator() {
 
   let sourceText = '';
 
-  if (hasChoiceYes) {
-    sourceText = document.getElementById('genOldResume').value.trim();
+ if (hasChoiceYes) {
+  sourceText = document.getElementById('genOldResume').value.trim();
 
-    if (!sourceText) {
-      errorEl.textContent = 'Cole seu currículo atual no campo acima.';
-      errorEl.classList.add('show');
-      return;
-    }
-  } else {
+  if (!uploadedGenResume && !sourceText) {
+    errorEl.textContent = 'Envie seu currículo atual ou cole o texto no campo acima.';
+    errorEl.classList.add('show');
+    return;
+  }
+} else {
     const name = document.getElementById('gqName').value.trim();
     const area = document.getElementById('gqArea').value.trim();
 
@@ -1666,7 +1594,16 @@ Formação: ${document.getElementById('gqEducation').value}
 Experiências: ${document.getElementById('gqExperience').value}
 Habilidades: ${document.getElementById('gqSkills').value}`;
   }
-
+if (hasChoiceYes && uploadedGenResume) {
+  userContent.push({
+    type: 'document',
+    source: {
+      type: 'base64',
+      media_type: uploadedGenResume.mediaType,
+      data: uploadedGenResume.base64
+    }
+  });
+}
   userContent.push({
     type: 'text',
     text: `Você é um especialista em currículos.
