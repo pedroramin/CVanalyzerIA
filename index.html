@@ -786,10 +786,27 @@
           <button class="gen-choice-btn active" id="genChoiceYes" onclick="switchCvChoice('yes')">✅ Sim, tenho currículo</button>
           <button class="gen-choice-btn" id="genChoiceNo" onclick="switchCvChoice('no')">🧭 Não tenho — preencher dados</button>
         </div>
-        <div id="genPaneOld" class="gen-pane show">
-          <span class="gen-field-label">Cole o texto do seu currículo atual *</span>
-          <textarea class="gen-textarea" id="genOldResume" style="min-height:150px" placeholder="Cole seu currículo atual aqui..."></textarea>
-        </div>
+       <div id="genPaneOld" class="gen-pane show">
+  <span class="gen-field-label">Envie seu currículo atual ou cole o texto *</span>
+
+  <div class="upload-area" id="genResumeDropZone" style="padding:28px 16px; margin-bottom:12px;">
+    <input type="file" id="genResumeFileInput" accept=".pdf,.txt">
+    <span class="upload-icon">📄</span>
+    <h3 style="font-size:0.95rem;">Arraste seu currículo aqui</h3>
+    <p>PDF recomendado · também aceita TXT</p>
+  </div>
+
+  <div class="file-info" id="genResumeFileInfo">
+    <div class="file-info-left">
+      <span>📎</span>
+      <span id="genResumeFileName"></span>
+    </div>
+    <button class="btn-remove-file" onclick="removeGenResumeFile()" title="Remover">✕</button>
+  </div>
+
+  <span class="gen-field-label">Ou cole o texto do seu currículo atual</span>
+  <textarea class="gen-textarea" id="genOldResume" style="min-height:150px" placeholder="Cole seu currículo atual aqui..."></textarea>
+</div>
         <div id="genPaneGuided" class="gen-pane">
           <div class="gen-row2">
             <div><span class="gen-field-label">Nome completo *</span><input class="gen-input" id="gqName" placeholder="Ana Lima"></div>
@@ -971,6 +988,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 let currentUser   = null;
 let uploadedFile  = null;
 let uploadedJob   = null;
+let uploadedGenResume = null;
 let currentMode   = 'standard';
 // ═══════════════════════════════════════════════════════════════════════════════
 // ── AUTH ──────────────────────────────────────────────────────────────────────
@@ -1273,6 +1291,78 @@ function handleFile(file) {
     };
     reader.readAsText(file, 'UTF-8');
   }
+  // ─── Upload (Gerador de Currículo) ─────────────────────────────
+
+let uploadedGenResume = null;
+
+const genResumeDropZone = document.getElementById('genResumeDropZone');
+const genResumeFileInput = document.getElementById('genResumeFileInput');
+
+if (genResumeDropZone && genResumeFileInput) {
+  genResumeDropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    genResumeDropZone.classList.add('drag-over');
+  });
+
+  genResumeDropZone.addEventListener('dragleave', () => {
+    genResumeDropZone.classList.remove('drag-over');
+  });
+
+  genResumeDropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    genResumeDropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) handleGenResumeFile(f);
+  });
+
+  genResumeFileInput.addEventListener('change', () => {
+    if (genResumeFileInput.files[0]) handleGenResumeFile(genResumeFileInput.files[0]);
+  });
+}
+
+function handleGenResumeFile(file) {
+  const errorEl = document.getElementById('errorMsg');
+  errorEl.classList.remove('show');
+
+  const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+  const isTxt = file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt');
+
+  if (!isPdf && !isTxt) {
+    errorEl.textContent = 'Formato não suportado. Use PDF ou TXT.';
+    errorEl.classList.add('show');
+    genResumeFileInput.value = '';
+    return;
+  }
+
+  document.getElementById('genResumeFileName').textContent = file.name;
+  document.getElementById('genResumeFileInfo').classList.add('show');
+
+  if (isPdf) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      uploadedGenResume = {
+        base64: e.target.result.split(',')[1],
+        mediaType: 'application/pdf',
+        name: file.name
+      };
+    };
+    reader.readAsDataURL(file);
+  } else {
+    uploadedGenResume = null;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('genOldResume').value = e.target.result;
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
+}
+
+function removeGenResumeFile() {
+  uploadedGenResume = null;
+  genResumeFileInput.value = '';
+  document.getElementById('genResumeFileInfo').classList.remove('show');
+  document.getElementById('genResumeFileName').textContent = '';
+}
 }
 
 function removeFile() {
