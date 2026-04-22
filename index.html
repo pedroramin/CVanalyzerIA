@@ -417,7 +417,20 @@
   .btn-redeem:hover { color: var(--text); border-color: var(--text); }
 
   /* ── HEADER ── */
-  .header { text-align: center; margin-bottom: 36px; }
+.header {
+  position: relative;
+}
+
+.header::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200,240,96,0.3), transparent);
+}
   .header h1 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900; line-height: 1; letter-spacing: -1px; }
   .header h1 span { color: var(--accent); }
   .header p { color: var(--muted); font-size: 0.78rem; margin-top: 10px; letter-spacing: 2px; text-transform: uppercase; }
@@ -798,6 +811,24 @@
     .hero-proof {
       padding: 20px 16px;
     }
+    /* ── BACKGROUND PREMIUM LIGHT ── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+
+  background:
+    radial-gradient(600px circle at 10% 20%, rgba(200,240,96,0.08), transparent 60%),
+    radial-gradient(700px circle at 90% 80%, rgba(140,120,255,0.06), transparent 60%);
+}
+
+/* garante que o conteúdo fique acima */
+#appContent {
+  position: relative;
+  z-index: 1;
+}
   }
 </style>
   
