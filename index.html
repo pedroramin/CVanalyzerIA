@@ -1171,7 +1171,7 @@ function showApp() {
   document.getElementById('userEmail').textContent = email;
   document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
 
-  updateWarning();
+setTimeout(updateWarning, 300);
 }
   
 
@@ -2095,8 +2095,11 @@ async function updateWarning() {
   if (error || !data) return false;
 
   const now = new Date();
-  const expires = new Date(data.access_expires_at);
-
+const expires = data.access_expires_at ? new Date(data.access_expires_at) : null;
+const expired = expires && now > expires;
+    if (!data.access_active || expired) {
+  return false;
+}
   const today = new Date().toISOString().slice(0,10);
 
   if (data.last_reset_date !== today) {
