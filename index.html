@@ -1659,10 +1659,12 @@ async function runFullAnalysis() {
   const resumeText = document.getElementById('resumeText').value.trim();
 
   if (!uploadedFile && !resumeText) {
-    errorEl.textContent = 'Envie seu currículo (PDF) ou cole o texto antes de analisar.';
-    errorEl.classList.add('show');
-    return;
-  }
+  document.getElementById('resultsSection').classList.remove('show');
+  document.getElementById('inputSection').style.display = 'block';
+  errorEl.textContent = 'Reenvie seu currículo ou cole o texto para gerar a análise completa.';
+  errorEl.classList.add('show');
+  return;
+}
 
   const userContent = [];
 
@@ -2024,8 +2026,7 @@ function restoreDraftState() {
     if (draft.genChoice) switchCvChoice(draft.genChoice);
     // Avisa sobre arquivos binários que não podem ser restaurados
     if (draft.hasFile && !uploadedFile) {
-      showToast('Bem-vindo de volta! Reenvie o PDF do currículo para continuar.', '');
-    }
+showToast('Bem-vindo de volta! Reenvie os arquivos do currículo e da vaga, se você usou upload.', '');    }
     return true;
   } catch(e) { console.warn('[draft] erro ao restaurar:', e); return false; }
 }
