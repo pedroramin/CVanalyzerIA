@@ -1981,15 +1981,32 @@ Regras obrigatórias:
         JSON.stringify(data)
       );
     }
+const rawText = data.content?.[0]?.text || '';
+console.log('RAW IA:', rawText);
 
-    const rawText = data.content?.[0]?.text || '';
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+let result;
+try {
+  const start = rawText.indexOf('{');
+  const end = rawText.lastIndexOf('}');
 
-    if (!jsonMatch) {
-      throw new Error('A IA não retornou JSON válido');
-    }
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error('A IA não retornou JSON válido');
+  }
 
-    const result = JSON.parse(jsonMatch[0]);
+  let jsonText = rawText.slice(start, end + 1).trim();
+
+  jsonText = jsonText
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/,\s*([}\]])/g, '$1')
+    .replace(/\n/g, ' ');
+
+  result = JSON.parse(jsonText);
+} catch (parseErr) {
+  console.error('Erro ao interpretar JSON da IA:', parseErr);
+  console.error('Resposta bruta da IA:', rawText);
+  throw new Error('A IA retornou uma resposta inválida. Tente novamente.');
+}
 
     document.getElementById('loadingSection').classList.remove('show');
     renderResults(result);
