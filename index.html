@@ -1961,7 +1961,7 @@ Regras obrigatórias:
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2000,
+        max_tokens: 3500,
         messages: [
           {
             role: 'user',
@@ -1983,24 +1983,27 @@ Regras obrigatórias:
     }
 const rawText = data.content?.[0]?.text || '';
 console.log('RAW IA:', rawText);
-alert(rawText.slice(0, 1000));
-    
+
 let result;
 try {
-  const start = rawText.indexOf('{');
-  const end = rawText.lastIndexOf('}');
+  let cleaned = rawText
+    .replace(/```json/gi, '')
+    .replace(/```/g, '')
+    .trim();
+
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
 
   if (start === -1 || end === -1 || end <= start) {
-    throw new Error('A IA não retornou JSON válido');
+    throw new Error('JSON não encontrado');
   }
 
-  let jsonText = rawText.slice(start, end + 1).trim();
+  let jsonText = cleaned.slice(start, end + 1).trim();
 
   jsonText = jsonText
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/[\u2018\u2019]/g, "'")
-    .replace(/,\s*([}\]])/g, '$1')
-    .replace(/\n/g, ' ');
+    .replace(/,\s*([}\]])/g, '$1');
 
   result = JSON.parse(jsonText);
 } catch (parseErr) {
@@ -2008,7 +2011,6 @@ try {
   console.error('Resposta bruta da IA:', rawText);
   throw new Error('A IA retornou uma resposta inválida. Tente novamente.');
 }
-
     document.getElementById('loadingSection').classList.remove('show');
     renderResults(result);
 
@@ -2393,7 +2395,7 @@ O resultado deve estar pronto para ser copiado e usado diretamente.`
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2000,
+        max_tokens: 3500,
         messages: [
           {
             role: 'user',
