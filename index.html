@@ -1983,7 +1983,8 @@ Regras obrigatórias:
     }
 const rawText = data.content?.[0]?.text || '';
 console.log('RAW IA:', rawText);
-
+alert(rawText.slice(0, 1000));
+    
 let result;
 try {
   const start = rawText.indexOf('{');
