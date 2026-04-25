@@ -1,3 +1,5 @@
+console.log('WEBHOOK TICTO RECEBIDO:', JSON.stringify(req.body, null, 2));
+
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
