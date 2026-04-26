@@ -5,23 +5,25 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-export default async function handler(request) {
+export default async function handler(req, res) {
   try {
-    const body = await request.json();
+    const body = req.body;
 
     console.log('WEBHOOK TICTO RECEBIDO:', JSON.stringify(body, null, 2));
 
-    // 🔥 AJUSTE AQUI DEPOIS COM O JSON REAL
+    // tenta pegar o email de várias formas
     const email =
       body?.customer?.email ||
       body?.buyer?.email ||
       body?.email;
 
     if (!email) {
-      return new Response(JSON.stringify({ error: 'Sem email' }), { status: 400 });
+      console.log('EMAIL NÃO ENCONTRADO NO WEBHOOK');
+      return res.status(400).json({ error: 'Sem email' });
     }
 
-    // ativa acesso
+    console.log('EMAIL CAPTURADO:', email);
+
     const { error } = await sb.rpc('activate_access_by_email', {
       email_input: email,
       days: 30,
@@ -29,14 +31,16 @@ export default async function handler(request) {
     });
 
     if (error) {
-      console.error(error);
-      return new Response(JSON.stringify({ error }), { status: 500 });
+      console.error('ERRO AO ATIVAR:', error);
+      return res.status(500).json({ error });
     }
 
-    return new Response(JSON.stringify({ success: true, email }), { status: 200 });
+    console.log('ACESSO ATIVADO PARA:', email);
+
+    return res.status(200).json({ success: true });
 
   } catch (err) {
     console.error('ERRO WEBHOOK:', err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return res.status(500).json({ error: err.message });
   }
 }
