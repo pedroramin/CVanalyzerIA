@@ -897,8 +897,7 @@ body::before {
     </div>
 
     <div class="auth-footer">
-      🔒 Seus dados são protegidos e nunca compartilhados.<br>
-      Crie sua conta e ative sua assinatura para começar a analisar.
+      🔒 Seus dados são protegidos e nunca compartilhados.
     </div>
   </div>
 </div>
@@ -920,7 +919,6 @@ body::before {
     <!-- Lado direito: visitante -->
     <div class="top-bar-guest-btns" id="topBarGuestBtns">
       <button class="btn-guest-login" onclick="openAuthModal('login')">Entrar</button>
-      <button class="btn-guest-register" onclick="openAuthModal('register')">Criar conta</button>
     </div>
     <!-- Lado direito: logado -->
     <button class="btn-logout" id="topBarLogout" onclick="handleLogout()" style="display:none;">Sair</button>
@@ -931,7 +929,7 @@ body::before {
    <div class="coin-left">
   <span class="coin-icon">✅</span>
   <div class="coin-info">
-    <span class="coin-label">Plano</span>
+    <span class="coin-label">Status</span>
     <span class="coin-count" id="coinCount">Verificando...</span>
   </div>
 </div>
@@ -944,49 +942,24 @@ body::before {
     <p>Análise profissional de currículo com inteligência artificial</p>
   </div>
 
- <div class="hero-proof">
-  <div class="hero-proof-badge">RESULTADOS REAIS</div>
 
-  <div class="hero-proof-title">
-    Mais de 2.000 currículos já analisados com sucesso
-  </div>
-
-  <div class="hero-proof-text">
-    Nosso sistema utiliza inteligência artificial para identificar pontos de melhoria e aumentar suas chances de contratação.
-  </div>
-
-  <div class="hero-proof-stats">
-    <div class="hero-proof-stat">
-      <strong>+2.000</strong>
-      <span>currículos analisados</span>
-    </div>
-
-    <div class="hero-proof-stat">
-      <strong>+85%</strong>
-      <span>aumento nas entrevistas</span>
-    </div>
-
-    <div class="hero-proof-stat">
-      <strong>IA</strong>
-      <span>análise inteligente</span>
-    </div>
-  </div>
-
-  <div class="hero-proof-mini">
-    Dados baseados em usuários reais da plataforma
-  </div>
-</div>
-
-  <div class="hero-proof-mini">
-    Ideal para quem quer entender o que está impedindo o currículo de chamar atenção.
-  </div>
-</div>
   
+  <!-- NO ACCESS BLOCK -->
+  <div id="noAccessBlock" style="display:none; border:1px solid var(--border); border-radius:4px; padding:32px 24px; text-align:center; background:#0f0f0f; margin-top:8px;">
+    <span style="font-size:2rem; display:block; margin-bottom:14px;">🔒</span>
+    <p style="font-size:0.88rem; color:var(--text); margin-bottom:8px; line-height:1.6;">Acesso não encontrado.</p>
+    <p style="font-size:0.76rem; color:var(--muted); margin-bottom:24px; line-height:1.8;">
+      Se você já realizou a compra, utilize o mesmo e-mail usado no pagamento.<br>
+      Caso tenha acabado de comprar, aguarde alguns instantes e atualize a página.
+    </p>
+    <button onclick="window.location.href=UPGRADE_URL" style="background:none; border:1px solid var(--border); color:var(--muted); font-family:'DM Mono',monospace; font-size:0.7rem; letter-spacing:1.5px; text-transform:uppercase; padding:10px 20px; border-radius:3px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--text)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">
+      Ir para página de acesso
+    </button>
+  </div>
+
   <!-- INPUT SECTION -->
   <div id="inputSection">
-   <div class="coin-low-warning" id="coinWarning">
-  ✦ Você pode gerar uma prévia gratuita. Faça login para continuar com a análise completa.
-</div>
+   <div class="coin-low-warning" id="coinWarning"></div>
     <div class="mode-toggle">
       <div class="mode-card active-standard" id="modeCardStandard" onclick="setMode('standard')">
         <span class="mode-check">✓</span>
@@ -1164,7 +1137,6 @@ body::before {
       </div>
     </div>
 
-    <p id="previewFreeNote" style="font-size:0.66rem;color:var(--muted);text-align:center;margin-top:8px;">✦ Prévia gratuita disponível · Análise completa requer acesso ativo</p>
     <button class="btn-analyze standard-btn" id="analyzeBtn" onclick="analyzeResume()">
   ✦ Analisar Currículo
     </button>
@@ -1207,16 +1179,16 @@ body::before {
     <div class="upsell-banner" id="upsellBanner" style="display:none" onclick="setMode('premium'); document.getElementById('inputSection').style.display='block'; document.getElementById('resultsSection').classList.remove('show');">
       <span style="font-size:1.4rem">🎯</span>
       <div class="upsell-text">
-        <strong>Quer saber se você passa na triagem?</strong>
-        <span>Use o Match por Vaga: envie o print da vaga e descubra seu % de compatibilidade.</span>
+        <strong>Analisar compatibilidade com uma vaga específica</strong>
+        <span>Use o Match por Vaga: envie o print da vaga e veja seu % de compatibilidade.</span>
       </div>
       <span class="upsell-arrow">→</span>
     </div>
     <div class="upsell-generator" id="upsellGenerator" style="display:none" onclick="setMode('generator'); document.getElementById('inputSection').style.display='block'; document.getElementById('resultsSection').classList.remove('show');">
       <span style="font-size:1.4rem">✨</span>
       <div class="upsell-text">
-        <strong>Quer um currículo gerado pela IA?</strong>
-        <span>Use o Gerador Elite: informe seus dados ou envie sua vaga e receba um currículo profissional pronto.</span>
+        <strong>Gerar um currículo com IA</strong>
+        <span>Use o Gerador: informe seus dados ou envie sua vaga e receba um currículo profissional pronto.</span>
       </div>
       <span class="upsell-arrow" style="color:var(--coral)">→</span>
     </div>
@@ -1265,8 +1237,8 @@ const API_ENDPOINT    = '/api/analyze';                           // seu proxy A
 // URL base do site — usada nos redirects de auth (e-mail de confirmação e Google OAuth)
 // Troque pelo seu domínio real quando fizer deploy (ex: 'https://cvanalyzer.com.br')
 const SITE_URL = 'https://c-vanalyzer-ia.vercel.app';
-// ── CTA comercial — troque pelo seu número real ──────────────────────────────
-const UPGRADE_URL = 'https://checkout.ticto.app/O540446B2';  // Moedas são creditadas via código de resgate enviado por e-mail após o pagamento
+// URL da página de acesso — não usar checkout direto
+const UPGRADE_URL = 'https://checkout.ticto.app/O540446B2';  // Substituir pelo link da landing page
 
 // Códigos de resgate são validados no Supabase (tabela redeem_codes) — não ficam expostos no front-end
 
@@ -1400,6 +1372,7 @@ async function handleLogout() {
   // App permanece visível — apenas volta ao estado visitante
   updateTopBar();
   updateWarning();
+  hideNoAccessBlock();
   // Limpa campos de auth
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPassword').value = '';
@@ -1465,6 +1438,7 @@ async function loadUserProfile() {
 async function showApp() {
   updateTopBar();
   closeAuthModal();
+  hideNoAccessBlock();
 
   // Se havia prévia gerada antes do login, restaura e atualiza o gate
   if (hasPreviewState()) {
@@ -1497,17 +1471,17 @@ async function refreshPreviewGate() {
   const hasAccess = await checkAccess();
   if (hasAccess) {
     gate.innerHTML = `
-      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px;">Sua conta está ativa. Gere a análise completa agora:</p>
+      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px;">Acesso ativo. Gere a análise completa:</p>
       <button class="btn-gate-full ${isPrem ? 'premium-btn' : ''}" onclick="runFullAnalysis()">
         ${isPrem ? '🎯 Gerar análise completa de match' : '✦ Gerar análise completa'}
       </button>`;
   } else {
     gate.innerHTML = `
   <div class="commercial-gate">
-    <h4>Sua conta foi criada, mas a análise completa exige acesso ativo</h4>
-    <p>Ative seu acesso para desbloquear a análise completa.</p>
-    <button class="btn-gate-full ${isPrem ? 'premium-btn' : ''}" onclick="window.location.href=UPGRADE_URL">
-      Ativar acesso
+    <h4 style="color:var(--muted);font-family:'DM Mono',monospace;font-size:0.8rem;">Acesso não encontrado</h4>
+    <p>Se você já realizou a compra, utilize o mesmo e-mail usado no pagamento. Caso tenha acabado de comprar, aguarde alguns instantes e atualize a página.</p>
+    <button class="btn-gate-full" onclick="window.location.href=UPGRADE_URL" style="background:none;border:1px solid var(--border);color:var(--muted);">
+      Ir para página de acesso
     </button>
   </div>`;
   }
@@ -1528,9 +1502,6 @@ function updateTopBar() {
     document.getElementById('userEmail').textContent = email;
     document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
   }
-  // Atualiza nota de prévia
-  const noteEl = document.getElementById('previewFreeNote');
-  if (noteEl) noteEl.style.display = isLogged ? 'none' : 'block';
 }
   
 
@@ -1763,20 +1734,22 @@ async function analyzeResume() {
   const errorEl = document.getElementById('errorMsg');
   errorEl.classList.remove('show');
 
-  // ── Modo gerador: exige login obrigatório ─────────────────────────────────
+  // ── Não logado: pede login ────────────────────────────────────────────────
+  if (!currentUser) {
+    openAuthModal('login', 'Faça login para usar o CVAnalyzer.');
+    return;
+  }
+
+  // ── Verifica acesso ───────────────────────────────────────────────────────
+  const allowed = await checkAccess();
+  if (!allowed) {
+    // updateWarning já exibe a mensagem adequada
+    await updateWarning();
+    return;
+  }
+
+  // ── Modo gerador ──────────────────────────────────────────────────────────
   if (currentMode === 'generator') {
-    if (!currentUser) {
-      saveDraftState();
-      openAuthModal('login', 'Para gerar seu currículo, crie uma conta gratuita.');
-      return;
-    }
-    // Logado: verificar acesso
-    const allowed = await checkAccess();
-    if (!allowed) {
-      errorEl.textContent = 'Você não tem acesso ativo para usar o Gerador.';
-      errorEl.classList.add('show');
-      return;
-    }
     await runGenerator();
     return;
   }
@@ -1789,21 +1762,7 @@ async function analyzeResume() {
     return;
   }
 
-  // VISITANTE: gera prévia barata, depois pede login
-  if (!currentUser) {
-    saveDraftState();
-    await generatePreviewAnalysis();
-    return;
-  }
-
-  // LOGADO SEM ACESSO: gera prévia + mostra bloqueio comercial
-  const allowed = await checkAccess();
-  if (!allowed) {
-    await generatePreviewAnalysis(true); // true = modo bloqueio comercial
-    return;
-  }
-
-  // LOGADO COM ACESSO: análise completa normal
+  // LOGADO COM ACESSO: análise completa
   await runFullAnalysis();
 }
 
@@ -2123,26 +2082,25 @@ function showLockedPreview(commercialGate = false) {
 
   if (!currentUser) {
     gate.innerHTML = `
-      <span class="preview-free-tag">Essa é sua prévia gratuita</span>
       <span class="preview-gate-icon">🔐</span>
-      <h3>Crie sua conta para continuar</h3>
-      <p>A análise completa inclui todos os pontos de melhoria, sugestões práticas e exemplos reescritos pela IA. É gratuito criar sua conta.</p>
+      <h3>Faça login para continuar</h3>
+      <p>A análise completa está disponível após o login.</p>
       <div class="preview-gate-btns">
-        <button class="btn-gate-login" onclick="openAuthModal('register','Crie sua conta para ver a análise completa.')">Criar conta grátis</button>
-        <button class="btn-gate-register" onclick="openAuthModal('login')">Já tenho conta</button>
+        <button class="btn-gate-login" onclick="openAuthModal('login')">Entrar</button>
+        <button class="btn-gate-register" onclick="openAuthModal('register')">Criar conta</button>
       </div>`;
   } else if (commercialGate) {
    gate.innerHTML = `
   <div class="commercial-gate">
-    <h4>Sua conta foi criada, mas a análise completa exige acesso ativo</h4>
-    <p>Ative seu acesso para desbloquear a análise completa e as demais funcionalidades.</p>
-    <button class="btn-gate-full ${isPrem ? 'premium-btn' : ''}" onclick="window.location.href=UPGRADE_URL">
-      Ativar acesso
+    <h4 style="color:var(--muted);font-family:'DM Mono',monospace;font-size:0.8rem;">Acesso não encontrado</h4>
+    <p>Se você já realizou a compra, utilize o mesmo e-mail usado no pagamento. Caso tenha acabado de comprar, aguarde alguns instantes e atualize a página.</p>
+    <button class="btn-gate-full" onclick="window.location.href=UPGRADE_URL" style="background:none;border:1px solid var(--border);color:var(--muted);">
+      Ir para página de acesso
     </button>
   </div>`;
   } else {
     gate.innerHTML = `
-      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px;">Sua conta está ativa. Gere a análise completa agora:</p>
+      <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px;">Acesso ativo. Gere a análise completa:</p>
       <button class="btn-gate-full ${isPrem ? 'premium-btn' : ''}" onclick="runFullAnalysis()">
         ${isPrem ? '🎯 Gerar análise completa de match' : '✦ Gerar análise completa'}
       </button>`;
@@ -2652,22 +2610,32 @@ async function handleEmailConfirmationReturn() {
 window.addEventListener('load', () => {
   handleEmailConfirmationReturn();
 });
+function showNoAccessBlock() {
+  const block = document.getElementById('noAccessBlock');
+  const input = document.getElementById('inputSection');
+  if (block) block.style.display = 'block';
+  if (input) input.style.display = 'none';
+}
+
+function hideNoAccessBlock() {
+  const block = document.getElementById('noAccessBlock');
+  const input = document.getElementById('inputSection');
+  if (block) block.style.display = 'none';
+  if (input) input.style.display = 'block';
+}
+
 async function updateWarning() {
   const w   = document.getElementById('coinWarning');
   const btn = document.getElementById('analyzeBtn');
   const planEl = document.getElementById('coinCount');
   const isGenerator = currentMode === 'generator';
 
-  // ── VISITANTE ─────────────────────────────────────────────────────────────
+  // ── NÃO LOGADO ────────────────────────────────────────────────────────────
   if (!currentUser) {
-    if (planEl) planEl.textContent = 'Prévia grátis';
-    if (btn) btn.disabled = false; // visitante SEMPRE pode clicar
+    if (planEl) planEl.textContent = 'Não autenticado';
+    if (btn) btn.disabled = true;
     if (w) {
-      if (isGenerator) {
-        w.innerHTML = '✦ O Gerador de Currículo requer uma conta. Crie a sua — é grátis!';
-      } else {
-        w.innerHTML = '✦ Você pode gerar uma <strong>prévia gratuita</strong>. Faça login depois para continuar com a análise completa.';
-      }
+      w.innerHTML = '⚠ Faça login para usar o aplicativo.';
       w.classList.add('show');
     }
     return;
@@ -2684,16 +2652,13 @@ async function updateWarning() {
 
   if (error || !data) {
     // Logado sem registro de acesso
-    if (planEl) planEl.textContent = 'Sem acesso';
-    if (btn) btn.disabled = isGenerator; // standard/premium: permite prévia; generator: bloqueia
+    if (planEl) planEl.textContent = 'Acesso não encontrado';
+    if (btn) btn.disabled = true;
     if (w) {
-      if (isGenerator) {
-w.innerHTML = '⚠ O Gerador requer acesso ativo. <a onclick="window.location.href=UPGRADE_URL" style="color:var(--gold);cursor:pointer;text-decoration:underline;">Ativar acesso</a>';
-      } else {
-        w.innerHTML = '⚠ Sua análise completa exige acesso ativo. Você pode ver uma <strong>prévia gratuita</strong> agora.';
-      }
+      w.innerHTML = '⚠ Acesso não encontrado. Se você já realizou a compra, utilize o mesmo e-mail usado no pagamento. Caso tenha acabado de comprar, aguarde alguns instantes e atualize a página.';
       w.classList.add('show');
     }
+    showNoAccessBlock();
     return;
   }
 
@@ -2710,33 +2675,32 @@ w.innerHTML = '⚠ O Gerador requer acesso ativo. <a onclick="window.location.hr
   const limitReached = data.used_today >= data.daily_limit;
 
   if (!active) {
-    if (planEl) planEl.textContent = 'Inativo';
-    if (btn) btn.disabled = isGenerator;
+    if (planEl) planEl.textContent = 'Acesso inativo';
+    if (btn) btn.disabled = true;
     if (w) {
-      if (isGenerator) {
-w.innerHTML = '⚠ Seu acesso expirou. <a onclick="window.location.href=UPGRADE_URL" style="color:var(--gold);cursor:pointer;text-decoration:underline;">Renovar acesso</a>';
-      } else {
-w.innerHTML = '⚠ Seu acesso não está ativo. Você pode ver uma <strong>prévia gratuita</strong> ou <a onclick="window.location.href=UPGRADE_URL" style="color:var(--gold);cursor:pointer;text-decoration:underline;">ativar acesso</a>.';
-      }
+      w.innerHTML = '⚠ Seu acesso não está mais ativo. Se você já realizou a compra, utilize o mesmo e-mail usado no pagamento. Caso tenha acabado de comprar, aguarde alguns instantes e atualize a página.';
       w.classList.add('show');
     }
+    showNoAccessBlock();
     return;
   }
 
   if (limitReached) {
-    if (planEl) planEl.textContent = 'Limite atingido';
+    if (planEl) planEl.textContent = 'Limite diário atingido';
     if (btn) btn.disabled = true;
     if (w) {
-w.innerHTML = '⚠ Seu limite diário de análises foi atingido. Volte amanhã para continuar.';
+      w.innerHTML = '⚠ Você atingiu o limite de análises de hoje. Volte amanhã para continuar.';
       w.classList.add('show');
     }
     return;
   }
 
   // Acesso ativo e dentro do limite
-  if (planEl) planEl.textContent = `Ativo · ${data.daily_limit - data.used_today} usos restantes`;
+  const remaining = data.daily_limit - data.used_today;
+  if (planEl) planEl.textContent = `Plano ativo · ${remaining} análise${remaining !== 1 ? 's' : ''} restante${remaining !== 1 ? 's' : ''} hoje`;
   if (w) w.classList.remove('show');
   if (btn) btn.disabled = false;
+  hideNoAccessBlock();
 }
   async function checkAccess() {
   if (!currentUser) return false;
