@@ -13,9 +13,12 @@ export default async function handler(req, res) {
 
     // tenta pegar o email de várias formas
     const email =
-      body?.customer?.email ||
-      body?.buyer?.email ||
-      body?.email;
+  body?.customer?.email ||
+  body?.buyer?.email ||
+  body?.client?.email ||
+  body?.data?.customer?.email ||
+  body?.data?.buyer?.email ||
+  body?.email;
 
     if (!email) {
       console.log('EMAIL NÃO ENCONTRADO NO WEBHOOK');
@@ -25,10 +28,10 @@ export default async function handler(req, res) {
     console.log('EMAIL CAPTURADO:', email);
 
     const { error } = await sb.rpc('activate_access_by_email', {
-      email_input: email,
-      days: 30,
-      limit_per_day: 10
-    });
+  target_email: email,
+  days: 30,
+  limit_per_day: 10
+});
 
     if (error) {
       console.error('ERRO AO ATIVAR:', error);
